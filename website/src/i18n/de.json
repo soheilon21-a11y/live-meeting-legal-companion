@@ -1,0 +1,21 @@
+{
+  "meta": {
+    "title": "Niyosh — Live Legal Meeting Companion",
+    "description": "Ein lokaler, datenschutzfreundlicher Meeting-Begleiter für juristische Fachkräfte. v1 in Entwicklung."
+  },
+  "notice": {
+    "v1InDevelopment": "v1 in Entwicklung"
+  },
+  "hero": {
+    "title": "Niyosh — Live Legal Meeting Companion",
+    "subtitle": "Ein lokaler, datenschutzfreundlicher Meeting-Begleiter für juristische Fachkräfte."
+  },
+  "links": {
+    "github": "Auf GitHub ansehen",
+    "githubUrl": "https://github.com/soheilon21-a11y/live-meeting-legal-companion"
+  },
+  "footer": {
+    "copyright": "© 2026 Soheil Onsori",
+    "privacy": "0 externe Anfragen · 0 Cookies · 0 Tracker"
+  }
+}

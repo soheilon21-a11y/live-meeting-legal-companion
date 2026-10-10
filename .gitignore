@@ -1,0 +1,19 @@
+# Python
+venv/
+__pycache__/
+.pytest_cache/
+
+# Node
+node_modules/
+dist/
+.astro/
+
+# Env & secrets
+.env
+
+# Data & uploads
+chroma_data/
+uploads/
+
+# Logs
+*.log

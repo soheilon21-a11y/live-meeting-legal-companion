@@ -1,0 +1,17 @@
+services:
+  app:
+    build: .
+    ports:
+      - "127.0.0.1:8002:8002"
+    environment:
+      OLLAMA_BASE_URL: http://ollama:11434
+    volumes:
+      - chroma_data:/app/chroma_data
+    depends_on:
+      - ollama
+
+  ollama:
+    image: ollama/ollama:0.5.4
+
+volumes:
+  chroma_data:

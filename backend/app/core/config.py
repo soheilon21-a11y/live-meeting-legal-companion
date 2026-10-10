@@ -1,0 +1,17 @@
+import os
+from pathlib import Path
+
+
+class Settings:
+    APP_NAME = "Niyosh — Live Legal Meeting Companion"
+    VERSION = "0.1.0"
+    PORT = 8002
+
+    MODEL_NAME = "llama3"
+    EMBEDDING_MODEL = "all-MiniLM-L6-v2"
+
+    OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+    CHROMA_DATA_DIR = Path(os.getenv("CHROMA_DATA_DIR", "chroma_data"))
+
+
+settings = Settings()
