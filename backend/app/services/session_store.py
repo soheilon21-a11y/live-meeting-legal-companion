@@ -23,6 +23,7 @@ def create_session(session_id: str, filename: str) -> dict:
         "filename": filename,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "findings": [],
+        "transcript": [],
     }
     _path(session_id).write_text(json.dumps(data), encoding="utf-8")
     return data
@@ -39,6 +40,20 @@ def add_finding(session_id: str, finding: dict) -> None:
     data = load_session(session_id)
     data["findings"].append(finding)
     _path(session_id).write_text(json.dumps(data), encoding="utf-8")
+
+
+def append_transcript(session_id: str, entry: dict) -> None:
+    data = load_session(session_id)
+    data.setdefault("transcript", [])
+    data["transcript"].append(entry)
+    _path(session_id).write_text(json.dumps(data), encoding="utf-8")
+
+
+def get_transcript(session_id: str) -> list[dict]:
+    data = load_session(session_id)
+    if data is None:
+        return []
+    return data.get("transcript", [])
 
 
 def delete_session(session_id: str) -> None:

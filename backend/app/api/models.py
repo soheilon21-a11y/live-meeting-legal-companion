@@ -18,6 +18,7 @@ class UploadResponse(BaseModel):
 class AnalyzeRequest(BaseModel):
     document_id: str
     discussion_point: str
+    transcript_excerpt: Optional[str] = None
 
 
 class Finding(BaseModel):
@@ -36,3 +37,30 @@ class AnalyzeResponse(Finding):
 class SessionFindings(BaseModel):
     session_id: str
     findings: list[Finding]
+
+
+class ConsentRequest(BaseModel):
+    session_id: str
+    country: str
+    participants: list[str]
+    consent_given: bool
+
+
+class ConsentResponse(BaseModel):
+    session_id: str
+    consents: list[dict]
+
+
+class TranscribeResponse(BaseModel):
+    text: str
+    language: str
+
+
+class DictationResponse(BaseModel):
+    text: str
+    language: str
+
+
+class TranscriptResponse(BaseModel):
+    session_id: str
+    transcript: list[dict]

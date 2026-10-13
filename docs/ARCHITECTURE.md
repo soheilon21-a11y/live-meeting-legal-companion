@@ -1,26 +1,35 @@
 # Architecture
 
-## Current stack (v1)
+## Current stack
 
 - FastAPI (Python 3.12) — API layer.
 - Ollama — local LLM inference (Llama 3).
 - ChromaDB + sentence-transformers — retrieval (embeddings + vector search).
-- Docker Compose — two services (`app` + `ollama`) and one named `chroma_data` volume.
+- faster-whisper (optional) — local, CPU speech-to-text for audio capture.
+- Docker Compose — two services (`app` + `ollama`) and one named `data` volume.
 - Astro — static bilingual (EN/DE) site.
 - pytest + GitHub Actions — CI.
 
-## Data flow (v1)
+## Data flow
 
-Manual entry → verbatim retrieval (RAG) → cited finding ("draft — review required").
+1. **Live analysis (Phase 2):** upload a reference contract → ingest (extract text, chunk, embed) → manual discussion point → verbatim retrieval (RAG) → LLM-grounded, cited finding ("draft — review required").
+2. **Audio capture (Phase 3):** dictation-only mode (default) or full-meeting capture (opt-in, behind a country check + hard consent gate) → local transcription (faster-whisper) → transcript appended to the session → transcript may feed `transcript_excerpt` into retrieval context.
 
-## Components added in later phases (NOT built in v1)
+## Services
 
-All three are deferred to Phase 2+ behind a consent gate and benchmarks:
+- `app/services/ingest.py` — extract text (PDF/DOCX/TXT), chunk, embed, store in Chroma.
+- `app/services/retrieval.py` — embed the query and return the top-K verbatim passages.
+- `app/services/analysis.py` — build the LLM prompt, call Ollama, parse and validate the finding (with a retrieval-only fallback).
+- `app/services/chroma_store.py` — Chroma collection lifecycle (get / create / delete per session).
+- `app/services/embedding.py` — sentence-transformers embedding helper.
+- `app/services/session_store.py` — per-session JSON: metadata, findings, and transcript.
+- `app/services/consent_store.py` — append-only JSONL consent log (`data/consent.jsonl`), owner-only permissions, GDPR erasure.
+- `app/services/country_check.py` — static, informational recording-rules lookup per country.
+- `app/services/transcription.py` — faster-whisper (local, CPU) batch transcription with a graceful error if not installed.
 
-1. **Consent gate** — explicit, recorded consent before any audio feature.
-2. **Live transcription** — real-time speech-to-text.
-3. **Advise panel** — in-meeting suggestions.
+## Audio capture modes (Phase 3)
 
-## Decision: not built in v1
+- **Dictation-only (default):** captures only the lawyer's own voice. Always available, no consent from others required.
+- **Full-meeting capture (opt-in):** requires a Country Check and recorded collective consent for the session. The backend refuses capture in code (`403`) without a consent record.
 
-v1 ships retrieval and drafting only. Audio capture, transcription, and in-meeting advising are deliberately excluded to keep the first release small, honest, and legally cautious (RDG and § 201 StGB — see `SCOPE.md`).
+The country check is informational only, not legal advice (see `SCOPE.md` and `SECURITY.md`).
