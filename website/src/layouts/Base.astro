@@ -16,9 +16,23 @@ const csp = [
   csp_extra,
 ].filter(Boolean).join('; ');
 const base = import.meta.env.BASE_URL;
-const homeHref = `${base}/`;
+const homeHref = lang === 'de' ? `${base}/de/` : `${base}/`;
 const liveHref = lang === 'de' ? `${base}/de/live/` : `${base}/live/`;
+const aboutHref = `${homeHref}#about`;
+const contactHref = `${homeHref}#contact`;
 const favicon = `${base}/favicon.svg`;
+
+let path = Astro.url.pathname;
+if (base && base !== '/' && path.startsWith(base)) path = path.slice(base.length);
+if (!path.startsWith('/')) path = '/' + path;
+let altRel;
+if (path.startsWith('/de')) {
+  altRel = path.slice(3) || '/';
+} else {
+  altRel = '/de' + path;
+}
+const altLangHref = base + altRel;
+const langToggleLabel = lang === 'de' ? 'EN' : 'DE';
 ---
 
 <!doctype html>
@@ -34,18 +48,78 @@ const favicon = `${base}/favicon.svg`;
   <body>
     <header class="site-header">
       <p class="notice">{t.notice.v1InDevelopment}</p>
-      <nav class="site-nav">
-        <a href={homeHref}>{t.nav.home}</a>
-        <a href={liveHref}>{t.nav.live}</a>
-      </nav>
+      <div class="header-row">
+        <a class="brand" href={homeHref}>
+          <svg class="brand-mark" viewBox="0 0 32 32" width="20" height="20" aria-hidden="true">
+            <rect width="32" height="32" rx="6" fill="#1E4B3C" />
+            <g stroke="#FAF7F1" stroke-width="2.5" stroke-linecap="round">
+              <line x1="9" y1="9" x2="23" y2="9" />
+              <line x1="9" y1="16" x2="19" y2="16" />
+              <line x1="9" y1="23" x2="15" y2="23" />
+            </g>
+          </svg>
+          <span class="brand-name">{t.brand}</span>
+        </a>
+        <nav class="site-nav">
+          <a href={homeHref}>{t.nav.home}</a>
+          <a href={liveHref}>{t.nav.live}</a>
+          <a href={aboutHref}>{t.nav.about}</a>
+          <a href={contactHref}>{t.nav.contact}</a>
+          <a class="lang-toggle" href={altLangHref} hreflang={lang === 'de' ? 'en' : 'de'}>{langToggleLabel}</a>
+          <a class="nav-icon" href={t.links.githubUrl} rel="noopener noreferrer" aria-label={t.links.github}>
+            <svg viewBox="0 0 16 16" width="17" height="17" aria-hidden="true">
+              <path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z" />
+            </svg>
+          </a>
+        </nav>
+      </div>
     </header>
     <main class="site-main">
       <slot />
     </main>
     <footer class="site-footer">
-      <a class="repo-link" href={t.links.githubUrl} rel="noopener noreferrer">{t.links.github}</a>
-      <p class="privacy-note">{t.footer.privacy}</p>
-      <p class="copyright">{t.footer.copyright}</p>
+      <div class="footer-grid">
+        <div class="footer-col footer-brand">
+          <a class="brand" href={homeHref}>
+            <svg class="brand-mark" viewBox="0 0 32 32" width="20" height="20" aria-hidden="true">
+              <rect width="32" height="32" rx="6" fill="#1E4B3C" />
+              <g stroke="#FAF7F1" stroke-width="2.5" stroke-linecap="round">
+                <line x1="9" y1="9" x2="23" y2="9" />
+                <line x1="9" y1="16" x2="19" y2="16" />
+                <line x1="9" y1="23" x2="15" y2="23" />
+              </g>
+            </svg>
+            <span class="brand-name">{t.brand}</span>
+          </a>
+          <p class="footer-tagline">{t.footer.tagline}</p>
+          <p class="footer-privacy">{t.footer.privacy}</p>
+        </div>
+        <div class="footer-col">
+          <h2 class="footer-heading">{t.footer.explore}</h2>
+          <ul class="footer-list">
+            <li><a href={homeHref}>{t.nav.home}</a></li>
+            <li><a href={liveHref}>{t.nav.live}</a></li>
+            <li><a href={aboutHref}>{t.nav.about}</a></li>
+            <li><a href={contactHref}>{t.nav.contact}</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h2 class="footer-heading">{t.footer.follow}</h2>
+          <ul class="footer-list">
+            <li><a href={t.links.linkedinUrl} rel="noopener noreferrer">{t.contact.linkedin}</a></li>
+            <li><a href={t.links.githubProfileUrl} rel="noopener noreferrer">{t.contact.github}</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h2 class="footer-heading">{t.footer.legal}</h2>
+          <ul class="footer-list">
+            <li><a href={t.footer.mitUrl} rel="noopener noreferrer">{t.footer.mit}</a></li>
+            <li><a href="#responsibility">{t.footer.responsibility}</a></li>
+            <li><span class="footer-plain">{t.footer.notAttorney}</span></li>
+          </ul>
+        </div>
+      </div>
+      <p class="footer-bottom">{t.footer.copyright}.</p>
     </footer>
   </body>
 </html>

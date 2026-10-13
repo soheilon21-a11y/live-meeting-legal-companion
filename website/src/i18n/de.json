@@ -1,4 +1,5 @@
 {
+  "brand": "Niyosh",
   "meta": {
     "title": "Niyosh — Live Legal Meeting Companion",
     "description": "Ein lokaler, datenschutzfreundlicher Meeting-Begleiter für juristische Fachkräfte. v1 in Entwicklung."
@@ -8,15 +9,43 @@
   },
   "hero": {
     "title": "Niyosh — Live Legal Meeting Companion",
-    "subtitle": "Ein lokaler, datenschutzfreundlicher Meeting-Begleiter für juristische Fachkräfte."
+    "subtitle": "Ein lokaler, datenschutzfreundlicher Meeting-Begleiter für juristische Fachkräfte.",
+    "ctaPrimary": "Auf GitHub ansehen",
+    "ctaSecondary": "Live-Analyse",
+    "trust": {
+      "localAI": "Lokale KI",
+      "bilingual": "Zweisprachig EN/DE",
+      "license": "MIT",
+      "noCloud": "Keine Cloud"
+    }
   },
   "links": {
     "github": "Auf GitHub ansehen",
-    "githubUrl": "https://github.com/soheilon21-a11y/live-meeting-legal-companion"
+    "githubUrl": "https://github.com/soheilon21-a11y/live-meeting-legal-companion",
+    "githubProfileUrl": "https://github.com/soheilon21-a11y",
+    "linkedinUrl": "https://www.linkedin.com/in/soheil-onsori/",
+    "emailUrl": "mailto:soheil.on21@gmail.com"
   },
   "nav": {
     "home": "Startseite",
-    "live": "Live-Analyse"
+    "live": "Live-Analyse",
+    "about": "Über",
+    "contact": "Kontakt"
+  },
+  "about": {
+    "title": "Warum der Name Niyosh",
+    "body1": "Niyosh wird von Soheil Onsori gepflegt, einem Juristen (LL.B.) und Entwickler, der datenschutzorientierte KI-Werkzeuge für die Rechtspraxis baut. Er ist der Autor von zwei früheren Tools: Karnam (Post-Meeting Legal Analyzer) und Namag (Vertragsklausel-Analyzer). Er hat das Legal Engineering Certificate der Harvey Academy sowie das AI-Fluency-Zertifikat von Anthropic erworben. Sein Schwerpunkt liegt an der Schnittstelle von juristischem Denken, angewandter KI und Compliance — DSGVO, EU-KI-Verordnung und § 201 StGB. Der Entwickler ist kein zugelassener Rechtsanwalt: Alle Ergebnisse sind für die Prüfung durch qualifizierte Fachpersonen vorgesehen.",
+    "body2": "Niyosh — vom mittelpersischen niyōš: hören, zuhören. Das Wort lebt im heutigen Persisch als niyōšā fort — jemand, der aufmerksam zuhört. Ich habe dieses Werkzeug nach dieser Idee benannt: ein Begleiter, der der Besprechung zuhört, damit sich die Juristin auf das Gespräch konzentrieren kann."
+  },
+  "contact": {
+    "title": "Kontakt",
+    "email": "E-Mail",
+    "linkedin": "LinkedIn",
+    "github": "GitHub"
+  },
+  "responsibility": {
+    "title": "Verantwortung des Nutzers",
+    "text": "Sie sind dafür verantwortlich, die lokalen Aufnahmegesetze zu prüfen, bevor Sie Audioaufnahmen verwenden. Ist das Aufnehmen in der Rechtsordnung der Besprechung eingeschränkt oder verboten, müssen Sie die Audioaufnahme vor Beginn der Besprechung deaktivieren. Diese Verantwortung liegt bei Ihnen, nicht beim Entwickler."
   },
   "live": {
     "title": "Live-Analyse",
@@ -59,10 +88,60 @@
       "upload": "Upload fehlgeschlagen.",
       "analyze": "Analyse fehlgeschlagen.",
       "generic": "Etwas ist schiefgelaufen."
+    },
+    "consent": {
+      "sectionTitle": "Sitzung einrichten",
+      "countryLabel": "Land der Besprechung",
+      "countryPlaceholder": "Land auswählen",
+      "countryOption": {
+        "DE": "Deutschland",
+        "AT": "Österreich",
+        "CH": "Schweiz",
+        "US": "Vereinigte Staaten",
+        "UK": "Vereinigtes Königreich",
+        "other": "Anderes / unbekannt"
+      },
+      "sourceLabel": "Quelle",
+      "disclaimer": "Nur informativ — keine Rechtsberatung. Konsultieren Sie eine Rechtsanwältin oder einen Rechtsanwalt vor Ort.",
+      "participantsLabel": "Teilnehmende (Namen, durch Komma getrennt)",
+      "participantsPlaceholder": "z. B. Alice, Bob",
+      "consentCheckbox": "Alle Teilnehmenden sind informiert und willigen in die Aufnahme ein.",
+      "recordConsent": "Einwilligung aufzeichnen",
+      "consentRecorded": "Einwilligung für diese Sitzung aufgezeichnet.",
+      "noSession": "Laden Sie zuerst ein Dokument hoch, um eine Sitzung zu erstellen.",
+      "disableAudio": "Audioaufnahme für diese Sitzung deaktivieren",
+      "disableAudioHint": "Wenn aktiviert, werden die Audio-Steuerelemente unten ausgeblendet. Sie bleiben dafür verantwortlich, die lokalen Aufnahmegesetze vor der Aufnahme zu prüfen."
+    },
+    "audio": {
+      "sectionTitle": "Audio",
+      "modeLabel": "Aufnahmemodus",
+      "modeDictation": "Nur Diktat (meine Stimme)",
+      "modeDictationHint": "Immer verfügbar. Keine Einwilligung erforderlich.",
+      "modeFull": "Gesamte Besprechung (Einwilligung erforderlich)",
+      "modeFullHint": "Erfordert eine aufgezeichnete Einwilligung für diese Sitzung.",
+      "fileLabel": "Audiodatei transkribieren (WAV, MP3 oder M4A)",
+      "transcribe": "Audiodatei transkribieren",
+      "transcribing": "Transkribiere …",
+      "viewTranscript": "Transkript anzeigen",
+      "transcriptTitle": "Transkript",
+      "transcriptEmpty": "Noch kein Transkript vorhanden.",
+      "copyToPoint": "In Diskussionspunkt übernehmen",
+      "copied": "In Diskussionspunkt übernommen.",
+      "errConsent": "Audioaufnahme verweigert: Keine aufgezeichnete Einwilligung für diese Sitzung. Zeichnen Sie oben die Einwilligung auf.",
+      "errTranscribe": "Transkription fehlgeschlagen.",
+      "errTranscript": "Das Transkript konnte nicht geladen werden."
     }
   },
   "footer": {
     "copyright": "© 2026 Soheil Onsori",
-    "privacy": "0 externe Anfragen · 0 Cookies · 0 Tracker"
+    "privacy": "0 externe Anfragen · 0 Cookies · 0 Tracker",
+    "tagline": "Lokaler Besprechungs-Begleiter für juristische Fachkräfte.",
+    "explore": "Entdecken",
+    "follow": "Folgen",
+    "legal": "Rechtliches",
+    "mit": "MIT-Lizenz",
+    "mitUrl": "https://github.com/soheilon21-a11y/live-meeting-legal-companion/blob/main/LICENSE",
+    "responsibility": "Verantwortung des Nutzers",
+    "notAttorney": "Der Entwickler ist kein zugelassener Rechtsanwalt"
   }
 }
