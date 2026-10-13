@@ -1,4 +1,5 @@
 {
+  "brand": "Niyosh",
   "meta": {
     "title": "Niyosh — Live Legal Meeting Companion",
     "description": "A local, privacy-first meeting companion for legal professionals. v1 in development."
@@ -8,15 +9,43 @@
   },
   "hero": {
     "title": "Niyosh — Live Legal Meeting Companion",
-    "subtitle": "A local, privacy-first meeting companion for legal professionals."
+    "subtitle": "A local, privacy-first meeting companion for legal professionals.",
+    "ctaPrimary": "View on GitHub",
+    "ctaSecondary": "Live Analysis",
+    "trust": {
+      "localAI": "Local AI",
+      "bilingual": "Bilingual EN/DE",
+      "license": "MIT",
+      "noCloud": "No cloud"
+    }
   },
   "links": {
     "github": "View on GitHub",
-    "githubUrl": "https://github.com/soheilon21-a11y/live-meeting-legal-companion"
+    "githubUrl": "https://github.com/soheilon21-a11y/live-meeting-legal-companion",
+    "githubProfileUrl": "https://github.com/soheilon21-a11y",
+    "linkedinUrl": "https://www.linkedin.com/in/soheil-onsori/",
+    "emailUrl": "mailto:soheil.on21@gmail.com"
   },
   "nav": {
     "home": "Home",
-    "live": "Live Analysis"
+    "live": "Live Analysis",
+    "about": "About",
+    "contact": "Contact"
+  },
+  "about": {
+    "title": "Why the name Niyosh",
+    "body1": "Niyosh is maintained by Soheil Onsori, a law graduate (LL.B.) and developer building privacy-first AI tools for legal work. He is the author of two prior tools: Karnam (post-meeting legal analysis) and Namag (contract clause analysis). He holds a Legal Engineering Certification from Harvey Academy and Anthropic's AI Fluency credential. His focus is the intersection of legal reasoning, applied AI, and compliance — GDPR, the EU AI Act, and § 201 StGB. The builder is not a licensed attorney: all outputs are designed for review by qualified legal professionals.",
+    "body2": "Niyosh — from the Middle Persian niyōš: to listen, to hear. The word lives on in Persian today as niyōšā — one who listens with attention and care. I named this tool after that idea: a companion that listens to the meeting so the lawyer can focus on the conversation."
+  },
+  "contact": {
+    "title": "Contact",
+    "email": "Email",
+    "linkedin": "LinkedIn",
+    "github": "GitHub"
+  },
+  "responsibility": {
+    "title": "User responsibility",
+    "text": "The user is responsible for verifying local recording laws before using audio capture. If recording is restricted or prohibited in the meeting's jurisdiction, the user must disable audio capture before the meeting starts. This responsibility lies with the user, not the builder."
   },
   "live": {
     "title": "Live Analysis",
@@ -59,10 +88,60 @@
       "upload": "Upload failed.",
       "analyze": "Analysis failed.",
       "generic": "Something went wrong."
+    },
+    "consent": {
+      "sectionTitle": "Session setup",
+      "countryLabel": "Country of the meeting",
+      "countryPlaceholder": "Select a country",
+      "countryOption": {
+        "DE": "Germany",
+        "AT": "Austria",
+        "CH": "Switzerland",
+        "US": "United States",
+        "UK": "United Kingdom",
+        "other": "Other / unknown"
+      },
+      "sourceLabel": "Source",
+      "disclaimer": "Informational only — not legal advice. Consult a local legal professional.",
+      "participantsLabel": "Participants (comma-separated names)",
+      "participantsPlaceholder": "e.g. Alice, Bob",
+      "consentCheckbox": "All participants are informed and consent to recording.",
+      "recordConsent": "Record consent",
+      "consentRecorded": "Consent recorded for this session.",
+      "noSession": "Upload a document first to create a session.",
+      "disableAudio": "Disable audio capture for this session",
+      "disableAudioHint": "When enabled, the audio controls below are hidden. You remain responsible for verifying local recording laws before recording."
+    },
+    "audio": {
+      "sectionTitle": "Audio",
+      "modeLabel": "Recording mode",
+      "modeDictation": "Dictation-only (my voice)",
+      "modeDictationHint": "Always available. No consent required.",
+      "modeFull": "Full meeting (consent required)",
+      "modeFullHint": "Requires recorded consent for this session.",
+      "fileLabel": "Transcribe audio file (WAV, MP3, or M4A)",
+      "transcribe": "Transcribe audio file",
+      "transcribing": "Transcribing…",
+      "viewTranscript": "View transcript",
+      "transcriptTitle": "Transcript",
+      "transcriptEmpty": "No transcript yet.",
+      "copyToPoint": "Copy to discussion point",
+      "copied": "Copied to discussion point.",
+      "errConsent": "Audio capture refused: no recorded consent for this session. Record consent above.",
+      "errTranscribe": "Transcription failed.",
+      "errTranscript": "Could not load the transcript."
     }
   },
   "footer": {
     "copyright": "© 2026 Soheil Onsori",
-    "privacy": "0 external requests · 0 cookies · 0 trackers"
+    "privacy": "0 external requests · 0 cookies · 0 trackers",
+    "tagline": "Local meeting companion for legal professionals.",
+    "explore": "Explore",
+    "follow": "Follow",
+    "legal": "Legal",
+    "mit": "MIT License",
+    "mitUrl": "https://github.com/soheilon21-a11y/live-meeting-legal-companion/blob/main/LICENSE",
+    "responsibility": "User responsibility",
+    "notAttorney": "Builder is not a licensed attorney"
   }
 }

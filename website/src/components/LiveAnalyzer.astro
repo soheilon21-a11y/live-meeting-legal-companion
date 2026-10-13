@@ -21,11 +21,60 @@ const scriptSrc = `${import.meta.env.BASE_URL}/live.js`;
   data-err-upload={t.live.error.upload}
   data-err-analyze={t.live.error.analyze}
   data-delete-confirm={t.live.deleteConfirm}
+  data-source-label={t.live.consent.sourceLabel}
+  data-country-disclaimer={t.live.consent.disclaimer}
+  data-consent-no-session={t.live.consent.noSession}
+  data-consent-recorded={t.live.consent.consentRecorded}
+  data-err-generic={t.live.error.generic}
+  data-transcribing={t.live.audio.transcribing}
+  data-transcript-empty={t.live.audio.transcriptEmpty}
+  data-copied={t.live.audio.copied}
+  data-err-consent={t.live.audio.errConsent}
+  data-err-transcribe={t.live.audio.errTranscribe}
+  data-err-transcript={t.live.audio.errTranscript}
 >
   <h1>{t.live.title}</h1>
   <p class="live-subtitle">{t.live.subtitle}</p>
 
   <p class="disclaimer">{t.live.disclaimer}</p>
+
+  <section class="live-setup">
+    <h2>{t.live.consent.sectionTitle}</h2>
+
+    <label class="live-label" for="live-country">{t.live.consent.countryLabel}</label>
+    <select id="live-country">
+      <option value="">{t.live.consent.countryPlaceholder}</option>
+      <option value="DE">{t.live.consent.countryOption.DE}</option>
+      <option value="AT">{t.live.consent.countryOption.AT}</option>
+      <option value="CH">{t.live.consent.countryOption.CH}</option>
+      <option value="US">{t.live.consent.countryOption.US}</option>
+      <option value="UK">{t.live.consent.countryOption.UK}</option>
+      <option value="other">{t.live.consent.countryOption.other}</option>
+    </select>
+    <div id="live-country-info" class="country-info" hidden></div>
+
+    <label class="live-label" for="live-participants">{t.live.consent.participantsLabel}</label>
+    <input type="text" id="live-participants" placeholder={t.live.consent.participantsPlaceholder} />
+
+    <label class="consent-check">
+      <input type="checkbox" id="live-consent" />
+      <span>{t.live.consent.consentCheckbox}</span>
+    </label>
+
+    <button type="button" id="live-record-consent" class="live-analyze">{t.live.consent.recordConsent}</button>
+    <p id="live-consent-status" class="live-status" role="status"></p>
+
+    <label class="consent-check disable-audio">
+      <input type="checkbox" id="live-disable-audio" />
+      <span>{t.live.consent.disableAudio}</span>
+    </label>
+    <p class="live-hint">{t.live.consent.disableAudioHint}</p>
+
+    <div class="responsibility" id="responsibility">
+      <h3>{t.responsibility.title}</h3>
+      <p>{t.responsibility.text}</p>
+    </div>
+  </section>
 
   <div class="live-form">
     <label class="live-label" for="live-file">{t.live.upload.label}</label>
@@ -38,6 +87,39 @@ const scriptSrc = `${import.meta.env.BASE_URL}/live.js`;
     <button type="button" id="live-analyze" class="live-analyze">{t.live.analyze}</button>
     <p id="live-status" class="live-status" role="status"></p>
   </div>
+
+  <section class="live-audio" id="live-audio-controls">
+    <h2>{t.live.audio.sectionTitle}</h2>
+
+    <fieldset class="audio-mode">
+      <legend class="live-label">{t.live.audio.modeLabel}</legend>
+      <label class="audio-mode-option">
+        <input type="radio" name="live-mode" value="dictation" checked />
+        <span>{t.live.audio.modeDictation}</span>
+        <span class="live-hint">{t.live.audio.modeDictationHint}</span>
+      </label>
+      <label class="audio-mode-option">
+        <input type="radio" name="live-mode" value="full" />
+        <span>{t.live.audio.modeFull}</span>
+        <span class="live-hint">{t.live.audio.modeFullHint}</span>
+      </label>
+    </fieldset>
+
+    <label class="live-label" for="live-audio-file">{t.live.audio.fileLabel}</label>
+    <input type="file" id="live-audio-file" accept=".wav,.mp3,.m4a" />
+
+    <div class="audio-actions">
+      <button type="button" id="live-transcribe" class="live-analyze">{t.live.audio.transcribe}</button>
+      <button type="button" id="live-view-transcript" class="live-export">{t.live.audio.viewTranscript}</button>
+    </div>
+    <p id="live-audio-status" class="live-status" role="status"></p>
+
+    <section id="live-transcript-wrap" hidden>
+      <h3>{t.live.audio.transcriptTitle}</h3>
+      <ul id="live-transcript" class="transcript-list"></ul>
+      <button type="button" id="live-copy-to-point" class="live-export">{t.live.audio.copyToPoint}</button>
+    </section>
+  </section>
 
   <section id="live-result"></section>
 
