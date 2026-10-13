@@ -11,7 +11,7 @@ CHUNK_OVERLAP = 120
 def extract_text(filename: str, content: bytes) -> str:
     ext = Path(filename).suffix.lower()
     if ext == ".pdf":
-        import fitz
+        import pymupdf as fitz
 
         doc = fitz.open(stream=content, filetype="pdf")
         return "\n".join(page.get_text() for page in doc)
