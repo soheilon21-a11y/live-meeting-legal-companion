@@ -1,0 +1,56 @@
+---
+const { t } = Astro.props;
+const scriptSrc = `${import.meta.env.BASE_URL}/live.js`;
+---
+
+<section
+  class="live"
+  data-draft-label={t.live.draftLabel}
+  data-verbatim-label={t.live.finding.verbatimLabel}
+  data-issue-label={t.live.finding.issueLabel}
+  data-evidence-label={t.live.finding.evidenceLabel}
+  data-suggested-label={t.live.finding.suggestedQuestionLabel}
+  data-ev-supported={t.live.finding.evidence.supported}
+  data-ev-conflicting={t.live.finding.evidence.conflicting}
+  data-ev-insufficient={t.live.finding.evidence.insufficient}
+  data-session-empty={t.live.session.empty}
+  data-uploading={t.live.uploading}
+  data-doc-ready={t.live.documentReady}
+  data-upload-first={t.live.uploadFirst}
+  data-analyzing={t.live.analyzing}
+  data-err-upload={t.live.error.upload}
+  data-err-analyze={t.live.error.analyze}
+  data-delete-confirm={t.live.deleteConfirm}
+>
+  <h1>{t.live.title}</h1>
+  <p class="live-subtitle">{t.live.subtitle}</p>
+
+  <p class="disclaimer">{t.live.disclaimer}</p>
+
+  <div class="live-form">
+    <label class="live-label" for="live-file">{t.live.upload.label}</label>
+    <input type="file" id="live-file" accept=".pdf,.docx,.txt" />
+    <p class="live-hint">{t.live.upload.hint}</p>
+
+    <label class="live-label" for="live-point">{t.live.discussionPoint.label}</label>
+    <textarea id="live-point" rows="3" placeholder={t.live.discussionPoint.placeholder}></textarea>
+
+    <button type="button" id="live-analyze" class="live-analyze">{t.live.analyze}</button>
+    <p id="live-status" class="live-status" role="status"></p>
+  </div>
+
+  <section id="live-result"></section>
+
+  <section class="live-session">
+    <h2>{t.live.session.title}</h2>
+    <ul id="live-findings" class="session-list"></ul>
+    <div class="session-actions">
+      <button type="button" id="live-export" class="live-export">{t.live.export}</button>
+      <button type="button" id="live-delete" class="live-delete">{t.live.delete}</button>
+    </div>
+  </section>
+
+  <p class="local-note">{t.live.localNote}</p>
+</section>
+
+<script is:inline src={scriptSrc}></script>

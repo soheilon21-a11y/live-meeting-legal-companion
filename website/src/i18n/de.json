@@ -14,6 +14,53 @@
     "github": "Auf GitHub ansehen",
     "githubUrl": "https://github.com/soheilon21-a11y/live-meeting-legal-companion"
   },
+  "nav": {
+    "home": "Startseite",
+    "live": "Live-Analyse"
+  },
+  "live": {
+    "title": "Live-Analyse",
+    "subtitle": "Analysieren Sie einen Referenzvertrag im Abgleich mit einem Diskussionspunkt aus der Besprechung – lokal und privat.",
+    "uploading": "Wird hochgeladen …",
+    "documentReady": "Dokument bereit.",
+    "uploadFirst": "Laden Sie zuerst ein Dokument hoch.",
+    "upload": {
+      "label": "Referenzvertrag (PDF, DOCX oder TXT)",
+      "hint": "Das Dokument wird lokal verarbeitet und verlässt Ihren Rechner nicht."
+    },
+    "discussionPoint": {
+      "label": "Diskussionspunkt aus der Besprechung",
+      "placeholder": "z. B. Der Kunde fragt, ob die Kündigungsfrist verkürzt werden kann."
+    },
+    "analyze": "Analysieren",
+    "analyzing": "Analysiere …",
+    "finding": {
+      "verbatimLabel": "Zitierte Passage",
+      "issueLabel": "Fragestellung",
+      "evidenceLabel": "Beleglage",
+      "suggestedQuestionLabel": "Vorgeschlagene Frage",
+      "evidence": {
+        "supported": "gestützt",
+        "conflicting": "widersprüchlich",
+        "insufficient": "unzureichend"
+      }
+    },
+    "draftLabel": "Entwurf — prüfpflichtig",
+    "disclaimer": "Entwurf — prüfpflichtig. Keine Rechtsberatung.",
+    "session": {
+      "title": "Sitzungsergebnisse",
+      "empty": "Noch keine Ergebnisse."
+    },
+    "export": "Ergebnisse exportieren (PDF)",
+    "delete": "Sitzung löschen",
+    "deleteConfirm": "Diese Sitzung und alle zugehörigen Daten löschen?",
+    "localNote": "Die Live-Analyse kommuniziert mit Ihrer lokal laufenden Niyosh-Anwendung auf localhost:8002.",
+    "error": {
+      "upload": "Upload fehlgeschlagen.",
+      "analyze": "Analyse fehlgeschlagen.",
+      "generic": "Etwas ist schiefgelaufen."
+    }
+  },
   "footer": {
     "copyright": "© 2026 Soheil Onsori",
     "privacy": "0 externe Anfragen · 0 Cookies · 0 Tracker"

@@ -1,0 +1,11 @@
+---
+import Base from '../../layouts/Base.astro';
+import LiveAnalyzer from '../../components/LiveAnalyzer.astro';
+import t from '../../i18n/de.json';
+
+const csp_extra = "script-src 'self'; connect-src 'self' http://localhost:8002";
+---
+
+<Base t={t} lang="de" csp_extra={csp_extra}>
+  <LiveAnalyzer t={t} />
+</Base>
