@@ -91,17 +91,32 @@ body {
 }
 
 .lang-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
   font-family: var(--mono);
   font-size: 0.8rem;
   border: 1px solid var(--bg);
   border-radius: 0.25rem;
   padding: 0.1rem 0.5rem;
-  text-decoration: none;
 }
 
-.lang-toggle:hover {
-  background: var(--bg);
-  color: var(--accent);
+.lang-toggle a {
+  font-size: 0.8rem;
+  color: var(--bg);
+  opacity: 0.7;
+}
+
+.lang-toggle a:hover {
+  opacity: 1;
+}
+
+.lang-divider {
+  opacity: 0.5;
+}
+
+.lang-active {
+  font-weight: 600;
 }
 
 .nav-icon {
@@ -124,6 +139,15 @@ section h2 {
   line-height: 1.15;
   color: var(--accent);
   margin: 0 0 1.25rem;
+}
+
+.kicker {
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  margin: 0 0 0.5rem;
 }
 
 /* Hero */

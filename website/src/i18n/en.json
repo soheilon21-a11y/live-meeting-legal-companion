@@ -33,11 +33,13 @@
     "contact": "Contact"
   },
   "about": {
+    "kicker": "ABOUT",
     "title": "Why the name Niyosh",
     "body1": "Niyosh is maintained by Soheil Onsori, a law graduate (LL.B.) and developer building privacy-first AI tools for legal work. He is the author of two prior tools: Karnam (post-meeting legal analysis) and Namag (contract clause analysis). He holds a Legal Engineering Certification from Harvey Academy and Anthropic's AI Fluency credential. His focus is the intersection of legal reasoning, applied AI, and compliance — GDPR, the EU AI Act, and § 201 StGB. The builder is not a licensed attorney: all outputs are designed for review by qualified legal professionals.",
     "body2": "Niyosh — from the Middle Persian niyōš: to listen, to hear. The word lives on in Persian today as niyōšā — one who listens with attention and care. I named this tool after that idea: a companion that listens to the meeting so the lawyer can focus on the conversation."
   },
   "contact": {
+    "kicker": "CONTACT",
     "title": "Contact",
     "email": "Email",
     "linkedin": "LinkedIn",
