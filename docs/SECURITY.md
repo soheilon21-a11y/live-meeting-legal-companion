@@ -15,7 +15,8 @@ No external requests are made at runtime. No telemetry, no analytics, no cloud s
 ## Data storage
 
 - Chroma data: one collection per session under `backend/data/chroma/` (named volume `data` at `/app/data` in Docker).
-- Session metadata and findings: JSON files under `backend/data/sessions/<session_id>.json`.
+- Session metadata, findings, and transcript: JSON files under `backend/data/sessions/<session_id>.json`.
+- Consent log: `backend/data/consent.jsonl` (append-only JSONL, see below).
 - The website stores nothing: no cookies, no trackers, no browser storage. The only client-side state is the in-memory session ID on the Live page, which is lost on reload.
 
 `backend/data/` is gitignored and never committed.
@@ -29,6 +30,27 @@ Live Analysis stores the following per session:
 - **Session metadata** — the session ID, document filename, and creation time, in the same JSON file.
 
 **Raw uploaded documents are not persisted** beyond their extracted text chunks. The original PDF/DOCX/TXT bytes are held in memory only during upload and are discarded immediately after ingestion. The only way raw document text leaves the session is the explicit "Export findings (PDF)" action, which the user triggers themselves.
+
+## Consent log (consent.jsonl)
+
+Consent is recorded in an **append-only JSONL log** at `backend/data/consent.jsonl`.
+
+- **Append-only, tamper-evident by design:** each consent event is appended as a single JSON line. There is no edit or delete of past entries.
+- **Owner-only permissions:** the file is set to `0600` (owner read/write) whenever it is created or written.
+- **Deletion (GDPR Art. 17):** `clear_consents(session_id)` removes only that session's lines. This is a deliberate, narrow exception to append-only behaviour to satisfy the right to erasure.
+- The consent log is tamper-evident by design, **not a certified legal record.**
+
+## Consent gate (hard technical gate)
+
+Full-meeting audio capture is refused **in code** unless a consent record with `consent_given: true` exists for that session. The backend returns 403 from `POST /api/live/transcribe` without recorded consent — this is enforced by the code, not by policy.
+
+## Dictation-only mode (default)
+
+Dictation-only mode captures only the lawyer's own voice, so no consent from other speakers is required. It is always available in any jurisdiction and is the default; full-meeting capture is opt-in per session.
+
+## Country check (informational)
+
+The country check is **informational only — not legal advice.** The **user is responsible** for verifying local recording laws (e.g. § 201 StGB in Germany) before using audio capture. If recording is restricted or prohibited in the meeting's jurisdiction, the user must disable audio capture before the meeting starts. This responsibility lies with the user, not the builder.
 
 ## How to delete data
 

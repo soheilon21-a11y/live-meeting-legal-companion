@@ -1,7 +1,8 @@
 import uuid
+from datetime import datetime, timezone
 from io import BytesIO
 
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from fastapi.responses import Response
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet
@@ -11,17 +12,30 @@ from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 from app.api.models import (
     AnalyzeRequest,
     AnalyzeResponse,
+    ConsentRequest,
+    ConsentResponse,
+    DictationResponse,
     Finding,
     SessionFindings,
+    TranscribeResponse,
+    TranscriptResponse,
     UploadResponse,
 )
-from app.services import analysis, ingest, session_store
+from app.services import analysis, consent_store, country_check, ingest, session_store, transcription
 
 router = APIRouter(prefix="/api/live", tags=["live"])
 
 
 def _esc(text: str) -> str:
     return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+def _transcribe_audio(file: UploadFile) -> dict:
+    content = file.file.read()
+    try:
+        return transcription.transcribe_audio(content)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
 
 
 def _build_pdf(session_id: str, filename: str, findings: list[dict]) -> bytes:
@@ -79,10 +93,91 @@ def analyze(req: AnalyzeRequest) -> AnalyzeResponse:
     session = session_store.load_session(req.document_id)
     if session is None:
         raise HTTPException(status_code=404, detail="Unknown document")
-    finding_data, mode = analysis.analyze(req.document_id, req.discussion_point)
+    finding_data, mode = analysis.analyze(
+        req.document_id, req.discussion_point, req.transcript_excerpt
+    )
     finding = Finding(**finding_data)
     session_store.add_finding(session["session_id"], finding.model_dump())
     return AnalyzeResponse(**finding.model_dump(), mode=mode)
+
+
+@router.get("/country/{code}")
+def country(code: str) -> dict:
+    rules = country_check.get_country(code)
+    return {
+        "code": code.strip().upper(),
+        "disclaimer": country_check.DISCLAIMER,
+        **rules,
+    }
+
+
+@router.post("/consent", response_model=ConsentResponse)
+def record_consent(req: ConsentRequest) -> ConsentResponse:
+    consent_store.record_consent(
+        req.session_id,
+        req.country,
+        req.participants,
+        req.consent_given,
+    )
+    consents = consent_store.get_consents(req.session_id)
+    return ConsentResponse(session_id=req.session_id, consents=consents)
+
+
+@router.get("/consent/{session_id}", response_model=ConsentResponse)
+def get_consents(session_id: str) -> ConsentResponse:
+    consents = consent_store.get_consents(session_id)
+    return ConsentResponse(session_id=session_id, consents=consents)
+
+
+@router.post("/transcribe", response_model=TranscribeResponse)
+def transcribe(
+    session_id: str = Form(...),
+    file: UploadFile = File(...),
+) -> TranscribeResponse:
+    if session_store.load_session(session_id) is None:
+        raise HTTPException(status_code=404, detail="Unknown session")
+    if not consent_store.has_consent(session_id):
+        raise HTTPException(
+            status_code=403,
+            detail="Audio capture refused: no recorded consent for this session",
+        )
+    result = _transcribe_audio(file)
+    session_store.append_transcript(
+        session_id,
+        {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "mode": "meeting",
+            **result,
+        },
+    )
+    return TranscribeResponse(**result)
+
+
+@router.post("/session/{session_id}/dictation", response_model=DictationResponse)
+def dictation(
+    session_id: str,
+    file: UploadFile = File(...),
+) -> DictationResponse:
+    if session_store.load_session(session_id) is None:
+        raise HTTPException(status_code=404, detail="Unknown session")
+    result = _transcribe_audio(file)
+    session_store.append_transcript(
+        session_id,
+        {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "mode": "dictation",
+            **result,
+        },
+    )
+    return DictationResponse(**result)
+
+
+@router.get("/session/{session_id}/transcript", response_model=TranscriptResponse)
+def get_transcript(session_id: str) -> TranscriptResponse:
+    if session_store.load_session(session_id) is None:
+        raise HTTPException(status_code=404, detail="Unknown session")
+    transcript = session_store.get_transcript(session_id)
+    return TranscriptResponse(session_id=session_id, transcript=transcript)
 
 
 @router.get("/session/{session_id}/findings", response_model=SessionFindings)

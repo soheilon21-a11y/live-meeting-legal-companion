@@ -57,8 +57,15 @@ def _parse_response(raw: str) -> dict:
     return {}
 
 
-def analyze(document_id: str, discussion_point: str) -> tuple[dict, str]:
-    passages = retrieval.retrieve(document_id, discussion_point)
+def analyze(
+    document_id: str,
+    discussion_point: str,
+    transcript_excerpt: str | None = None,
+) -> tuple[dict, str]:
+    query = discussion_point
+    if transcript_excerpt:
+        query = f"{transcript_excerpt}\n{discussion_point}"
+    passages = retrieval.retrieve(document_id, query)
     if not passages:
         return {
             "verbatim_passage": "",

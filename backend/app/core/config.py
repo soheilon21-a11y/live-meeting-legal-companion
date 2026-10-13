@@ -18,5 +18,7 @@ class Settings:
     DATA_DIR = Path(os.getenv("DATA_DIR", "data"))
     TOP_K = 3
 
+    LIVE_WHISPER_MODEL = os.getenv("LIVE_WHISPER_MODEL", "small")
+
 
 settings = Settings()
