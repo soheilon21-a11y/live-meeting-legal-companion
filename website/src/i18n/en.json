@@ -14,6 +14,53 @@
     "github": "View on GitHub",
     "githubUrl": "https://github.com/soheilon21-a11y/live-meeting-legal-companion"
   },
+  "nav": {
+    "home": "Home",
+    "live": "Live Analysis"
+  },
+  "live": {
+    "title": "Live Analysis",
+    "subtitle": "Analyze a reference contract against a discussion point raised in the meeting — locally, in private.",
+    "uploading": "Uploading…",
+    "documentReady": "Document ready.",
+    "uploadFirst": "Upload a document first.",
+    "upload": {
+      "label": "Reference contract (PDF, DOCX, or TXT)",
+      "hint": "The document is processed locally and never leaves your machine."
+    },
+    "discussionPoint": {
+      "label": "Discussion point from the meeting",
+      "placeholder": "e.g. The customer asks whether the notice period can be shortened."
+    },
+    "analyze": "Analyze",
+    "analyzing": "Analyzing…",
+    "finding": {
+      "verbatimLabel": "Quoted passage",
+      "issueLabel": "Issue",
+      "evidenceLabel": "Evidence",
+      "suggestedQuestionLabel": "Suggested question",
+      "evidence": {
+        "supported": "supported",
+        "conflicting": "conflicting",
+        "insufficient": "insufficient"
+      }
+    },
+    "draftLabel": "draft — review required",
+    "disclaimer": "Draft — review required. Not legal advice.",
+    "session": {
+      "title": "Session findings",
+      "empty": "No findings yet."
+    },
+    "export": "Export findings (PDF)",
+    "delete": "Delete session",
+    "deleteConfirm": "Delete this session and all its data?",
+    "localNote": "Live Analysis talks to your locally running Niyosh app at localhost:8002.",
+    "error": {
+      "upload": "Upload failed.",
+      "analyze": "Analysis failed.",
+      "generic": "Something went wrong."
+    }
+  },
   "footer": {
     "copyright": "© 2026 Soheil Onsori",
     "privacy": "0 external requests · 0 cookies · 0 trackers"

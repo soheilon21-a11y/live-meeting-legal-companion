@@ -2,7 +2,23 @@
 import '../styles/global.css';
 
 const { t, lang } = Astro.props;
-const favicon = `${import.meta.env.BASE_URL}/favicon.svg`;
+const csp_extra = Astro.props.csp_extra ?? '';
+const hasScriptSrc = csp_extra.includes('script-src');
+const csp = [
+  "default-src 'none'",
+  hasScriptSrc ? '' : "script-src 'none'",
+  "style-src 'self'",
+  "img-src 'self'",
+  "font-src 'self'",
+  "base-uri 'none'",
+  "form-action 'none'",
+  "frame-ancestors 'none'",
+  csp_extra,
+].filter(Boolean).join('; ');
+const base = import.meta.env.BASE_URL;
+const homeHref = `${base}/`;
+const liveHref = lang === 'de' ? `${base}/de/live/` : `${base}/live/`;
+const favicon = `${base}/favicon.svg`;
 ---
 
 <!doctype html>
@@ -10,10 +26,7 @@ const favicon = `${import.meta.env.BASE_URL}/favicon.svg`;
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      http-equiv="Content-Security-Policy"
-      content="default-src 'none'; script-src 'none'; style-src 'self'; img-src 'self'; font-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
-    />
+    <meta http-equiv="Content-Security-Policy" content={csp} />
     <meta name="description" content={t.meta.description} />
     <link rel="icon" type="image/svg+xml" href={favicon} />
     <title>{t.meta.title}</title>
@@ -21,6 +34,10 @@ const favicon = `${import.meta.env.BASE_URL}/favicon.svg`;
   <body>
     <header class="site-header">
       <p class="notice">{t.notice.v1InDevelopment}</p>
+      <nav class="site-nav">
+        <a href={homeHref}>{t.nav.home}</a>
+        <a href={liveHref}>{t.nav.live}</a>
+      </nav>
     </header>
     <main class="site-main">
       <slot />

@@ -14,6 +14,7 @@ dist/
 # Data & uploads
 chroma_data/
 uploads/
+backend/data/
 
 # Logs
 *.log

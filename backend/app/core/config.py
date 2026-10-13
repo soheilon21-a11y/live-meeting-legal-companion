@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 
+os.environ.setdefault("ANONYMIZED_TELEMETRY", "False")
+
 
 class Settings:
     APP_NAME = "Niyosh — Live Legal Meeting Companion"
@@ -12,6 +14,9 @@ class Settings:
 
     OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
     CHROMA_DATA_DIR = Path(os.getenv("CHROMA_DATA_DIR", "chroma_data"))
+
+    DATA_DIR = Path(os.getenv("DATA_DIR", "data"))
+    TOP_K = 3
 
 
 settings = Settings()

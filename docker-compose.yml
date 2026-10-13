@@ -6,7 +6,7 @@ services:
     environment:
       OLLAMA_BASE_URL: http://ollama:11434
     volumes:
-      - chroma_data:/app/chroma_data
+      - data:/app/data
     depends_on:
       - ollama
 
@@ -14,4 +14,4 @@ services:
     image: ollama/ollama:0.5.4
 
 volumes:
-  chroma_data:
+  data:
