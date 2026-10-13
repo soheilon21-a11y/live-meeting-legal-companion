@@ -27,6 +27,7 @@ const githubValue = t.links.githubProfileUrl.replace(/\/+$/, '').split('/').pop(
 </section>
 
 <section class="about" id="about">
+  <p class="kicker">{t.about.kicker}</p>
   <h2>{t.about.title}</h2>
   <p class="about-body">{t.about.body1}</p>
   <blockquote class="about-quote">{t.about.body2}</blockquote>
@@ -37,6 +38,7 @@ const githubValue = t.links.githubProfileUrl.replace(/\/+$/, '').split('/').pop(
 </section>
 
 <section class="contact" id="contact">
+  <p class="kicker">{t.contact.kicker}</p>
   <h2>{t.contact.title}</h2>
   <div class="contact-grid">
     <a class="contact-card" href={t.links.emailUrl}>
