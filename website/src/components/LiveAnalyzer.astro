@@ -34,6 +34,10 @@ const scriptSrc = `${import.meta.env.BASE_URL}/live.js`;
   data-err-consent={t.live.audio.errConsent}
   data-err-transcribe={t.live.audio.errTranscribe}
   data-err-transcript={t.live.audio.errTranscript}
+  data-obs-auto-label={t.live.observations.autoLabel}
+  data-obs-dismiss={t.live.observations.dismiss}
+  data-obs-empty={t.live.observations.empty}
+  data-obs-excerpt-label={t.live.observations.excerptLabel}
 >
   <h1>{t.live.title}</h1>
   <p class="live-subtitle">{t.live.subtitle}</p>
@@ -41,6 +45,11 @@ const scriptSrc = `${import.meta.env.BASE_URL}/live.js`;
   <p class="disclaimer">{t.live.disclaimer}</p>
 
   <LiveMeeting t={t} />
+
+  <section class="live-observations">
+    <h2>{t.live.observations.title}</h2>
+    <ul id="live-observations" class="observation-list"></ul>
+  </section>
 
   <section class="live-setup">
     <h2>{t.live.consent.sectionTitle}</h2>

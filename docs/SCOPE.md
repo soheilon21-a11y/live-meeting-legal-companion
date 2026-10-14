@@ -32,7 +32,17 @@ The Live page now records the meeting directly in the browser and streams it to 
 - **Graceful degradation:** the transcription queue is bounded (max 3). If it fills up, new audio chunks are still saved to disk but deferred to "process after meeting" and the status reports a backlog.
 - **Mutual exclusion:** speech-to-text and the LLM share a lock so the two CPU-bound models never run concurrently on the 8 GB RAM target.
 
-## What v1 / Phase 3 / Phase 4a do NOT do
+## What Phase 4b adds (automatic observations during the meeting)
+
+While the meeting is being transcribed, Niyosh periodically checks the **new** transcript text (only since the last check — never the whole transcript) against the uploaded reference contract using the existing retrieval pipeline (`retrieval.retrieve`, K=3). If a relevant passage is found, a small **observation card** appears in a non-blocking "Observations" panel beside the transcript.
+
+- **Non-blocking:** observations appear in a sidebar section and never interrupt the meeting UI.
+- **Review prompts, not conclusions:** each observation is phrased as a **question**, labelled **"auto — review required"**, with an evidence status and a suggested question. Niyosh never decides; the lawyer dismisses or acts.
+- **Traceable:** every observation links to the verbatim transcript excerpt that triggered it plus the retrieved contract passage.
+- **Auditable:** observations are stored locally in per-session JSON (`data/observations/<session_id>.json`). Dismissing an observation marks it `dismissed=true` for the audit trail — it is never deleted.
+- **Deterministic and local:** the check is retrieval-only (no LLM call); it reuses the existing RAG and makes no external requests.
+
+## What v1 / Phase 3 / Phase 4a / Phase 4b do NOT do
 
 - No speaker diarization (Phase 4c).
 - No real-time streaming transcription — live transcription is chunked, near-real-time (30-90 s delay), not streaming.
