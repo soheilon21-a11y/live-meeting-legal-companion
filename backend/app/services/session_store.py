@@ -56,6 +56,26 @@ def get_transcript(session_id: str) -> list[dict]:
     return data.get("transcript", [])
 
 
+def apply_speakers(session_id: str, chunk_speakers: dict[int, str]) -> None:
+    data = load_session(session_id)
+    for entry in data.get("transcript", []):
+        idx = entry.get("chunk_index")
+        if idx in chunk_speakers:
+            entry["speaker"] = chunk_speakers[idx]
+    _path(session_id).write_text(json.dumps(data), encoding="utf-8")
+
+
+def set_speaker(session_id: str, chunk_index: int, speaker: str) -> bool:
+    data = load_session(session_id)
+    updated = False
+    for entry in data.get("transcript", []):
+        if entry.get("chunk_index") == chunk_index:
+            entry["speaker"] = speaker
+            updated = True
+    _path(session_id).write_text(json.dumps(data), encoding="utf-8")
+    return updated
+
+
 def delete_session(session_id: str) -> None:
     p = _path(session_id)
     if p.exists():

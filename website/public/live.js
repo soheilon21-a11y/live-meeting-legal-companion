@@ -15,6 +15,8 @@ const audioFileInput = $("live-audio-file"), transcribeBtn = $("live-transcribe"
 const viewTranscriptBtn = $("live-view-transcript"), audioStatus = $("live-audio-status");
 const transcriptWrap = $("live-transcript-wrap"), transcriptList = $("live-transcript");
 const copyToPointBtn = $("live-copy-to-point");
+const diarizeBtn = $("live-diarize"), diarizeSummary = $("live-diarize-summary"), diarizeNote = $("live-diarize-note");
+let speakersDetected = 0;
 
 function el(tag, cls, text) {
   const n = document.createElement(tag);
@@ -73,8 +75,33 @@ async function loadFindings() {
   }
 }
 
+function speakerName(i) {
+  return I18N.diarizeSpeaker.replace("N", String(i));
+}
+
+function speakerSelect(seg) {
+  const select = el("select", "speaker-select");
+  const count = Math.max(speakersDetected, 1);
+  const unknown = el("option", null, I18N.diarizeUnknown);
+  unknown.value = "Unknown";
+  select.appendChild(unknown);
+  for (let i = 1; i <= count; i++) {
+    const opt = el("option", null, speakerName(i));
+    opt.value = `Speaker ${i}`;
+    select.appendChild(opt);
+  }
+  select.value = seg.speaker || "Unknown";
+  select.addEventListener("change", async () => {
+    const chosen = select.value;
+    await correctSpeaker(seg.chunk_index, chosen);
+    seg.speaker = chosen;
+  });
+  return select;
+}
+
 function renderTranscript() {
   transcriptList.replaceChildren();
+  diarizeBtn.hidden = !transcript.some((s) => s.chunk_index != null);
   if (!transcript.length) {
     transcriptList.appendChild(el("li", "transcript-empty", I18N.transcriptEmpty));
     transcriptWrap.hidden = false;
@@ -83,6 +110,7 @@ function renderTranscript() {
   for (const seg of transcript) {
     const li = el("li", "transcript-item");
     if (seg.timestamp) li.appendChild(el("span", "transcript-time", new Date(seg.timestamp).toLocaleTimeString()));
+    if (seg.chunk_index != null) li.appendChild(speakerSelect(seg));
     li.appendChild(el("span", "transcript-text", seg.text || ""));
     transcriptList.appendChild(li);
   }
@@ -102,6 +130,46 @@ async function loadTranscript() {
   }
 }
 
+async function correctSpeaker(chunkIndex, speaker) {
+  if (!sessionId || chunkIndex == null) return;
+  try {
+    const r = await fetch(`${API}/api/live/session/${sessionId}/correct-speaker`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chunk_index: chunkIndex, speaker }),
+    });
+    if (!r.ok) throw new Error();
+  } catch (e) {
+    audioStatus.textContent = I18N.diarizeError;
+  }
+}
+
+async function diarize() {
+  if (!sessionId) return;
+  diarizeBtn.disabled = true;
+  try {
+    const r = await fetch(`${API}/api/live/session/${sessionId}/diarize`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    if (!r.ok) throw new Error();
+    const d = await r.json();
+    speakersDetected = d.speakers_detected || 0;
+    transcript = d.transcript || [];
+    if (speakersDetected > 0) {
+      diarizeSummary.textContent = I18N.diarizeSummary.replace("N", String(speakersDetected));
+      diarizeSummary.hidden = false;
+      diarizeNote.hidden = false;
+    }
+    renderTranscript();
+  } catch (e) {
+    audioStatus.textContent = I18N.diarizeError;
+  } finally {
+    diarizeBtn.disabled = false;
+  }
+}
+
 fileInput.addEventListener("change", async () => {
   const file = fileInput.files[0];
   if (!file) return;
@@ -116,6 +184,10 @@ fileInput.addEventListener("change", async () => {
     transcript = [];
     transcriptList.replaceChildren();
     transcriptWrap.hidden = true;
+    speakersDetected = 0;
+    diarizeSummary.hidden = true;
+    diarizeNote.hidden = true;
+    diarizeBtn.hidden = true;
     consentStatus.textContent = "";
     statusEl.textContent = I18N.docReady;
     loadFindings();
@@ -244,6 +316,8 @@ viewTranscriptBtn.addEventListener("click", () => {
   loadTranscript();
 });
 
+diarizeBtn.addEventListener("click", diarize);
+
 copyToPointBtn.addEventListener("click", () => {
   const text = transcript.map((s) => s.text).filter(Boolean).join("\n");
   pointInput.value = text;
@@ -268,6 +342,10 @@ deleteBtn.addEventListener("click", async () => {
   renderFindings([]);
   transcriptList.replaceChildren();
   transcriptWrap.hidden = true;
+  speakersDetected = 0;
+  diarizeSummary.hidden = true;
+  diarizeNote.hidden = true;
+  diarizeBtn.hidden = true;
   consentStatus.textContent = "";
   audioStatus.textContent = "";
   obsLastIndex = -1;

@@ -38,6 +38,12 @@ const scriptSrc = `${import.meta.env.BASE_URL}/live.js`;
   data-obs-dismiss={t.live.observations.dismiss}
   data-obs-empty={t.live.observations.empty}
   data-obs-excerpt-label={t.live.observations.excerptLabel}
+  data-diarize-button={t.live.diarization.button}
+  data-diarize-summary={t.live.diarization.summary}
+  data-diarize-speaker={t.live.diarization.speaker}
+  data-diarize-unknown={t.live.diarization.unknown}
+  data-diarize-error={t.live.diarization.error}
+  data-diarize-approximate={t.live.diarization.approximate}
 >
   <h1>{t.live.title}</h1>
   <p class="live-subtitle">{t.live.subtitle}</p>
@@ -129,6 +135,11 @@ const scriptSrc = `${import.meta.env.BASE_URL}/live.js`;
 
     <section id="live-transcript-wrap" hidden>
       <h3>{t.live.audio.transcriptTitle}</h3>
+      <div class="diarize-bar">
+        <button type="button" id="live-diarize" class="live-export" hidden>{t.live.diarization.button}</button>
+        <p id="live-diarize-summary" class="diarize-summary" hidden></p>
+        <p id="live-diarize-note" class="live-hint" hidden>{t.live.diarization.approximate}</p>
+      </div>
       <ul id="live-transcript" class="transcript-list"></ul>
       <button type="button" id="live-copy-to-point" class="live-export">{t.live.audio.copyToPoint}</button>
     </section>
