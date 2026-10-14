@@ -52,6 +52,14 @@ Dictation-only mode captures only the lawyer's own voice, so no consent from oth
 
 The country check is **informational only — not legal advice.** The **user is responsible** for verifying local recording laws (e.g. § 201 StGB in Germany) before using audio capture. If recording is restricted or prohibited in the meeting's jurisdiction, the user must disable audio capture before the meeting starts. This responsibility lies with the user, not the builder.
 
+## Text-to-speech (Phase 5a)
+
+TTS audio is generated locally using Piper. No audio data is sent to any external service. Voice models are stored locally (`models/piper/`). TTS output is streamed to the browser and not persisted.
+
+## No certification claims
+
+Niyosh does **not** claim SOC 2, ISO 27001, or any other certification. The local-only, zero-external-request architecture **is** the security claim — everything runs on the host machine and nothing leaves it.
+
 ## How to delete data
 
 ### In the app

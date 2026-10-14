@@ -10,3 +10,4 @@ python-multipart==0.0.32
 numpy==1.26.4
 scikit-learn==1.7.2
 speechbrain==1.1.1
+piper-tts==1.8.0

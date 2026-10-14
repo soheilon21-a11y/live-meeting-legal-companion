@@ -168,6 +168,16 @@
       "unknown": "Unbekannt",
       "error": "Diarisierung nicht verfügbar",
       "approximate": "Sprecherzuordnung ist ungefähr — mit Audio abgleichen"
+    },
+    "tts": {
+      "button": "Vorlesen",
+      "voiceSelector": "Stimme",
+      "auto": "Auto",
+      "en": "Englisch",
+      "de": "Deutsch",
+      "note": "Sprachausgabe erfolgt lokal — keine Cloud, keine externen Anfragen",
+      "error": "Sprachausgabe nicht verfügbar — installieren Sie piper-tts",
+      "empty": "Text ist leer — nichts vorzulesen"
     }
   },
   "footer": {

@@ -44,6 +44,15 @@ const scriptSrc = `${import.meta.env.BASE_URL}/live.js`;
   data-diarize-unknown={t.live.diarization.unknown}
   data-diarize-error={t.live.diarization.error}
   data-diarize-approximate={t.live.diarization.approximate}
+  data-tts-button={t.live.tts.button}
+  data-tts-voice-selector={t.live.tts.voiceSelector}
+  data-tts-auto={t.live.tts.auto}
+  data-tts-en={t.live.tts.en}
+  data-tts-de={t.live.tts.de}
+  data-tts-note={t.live.tts.note}
+  data-tts-error={t.live.tts.error}
+  data-tts-empty={t.live.tts.empty}
+  data-disclaimer={t.live.disclaimer}
 >
   <h1>{t.live.title}</h1>
   <p class="live-subtitle">{t.live.subtitle}</p>
@@ -147,8 +156,22 @@ const scriptSrc = `${import.meta.env.BASE_URL}/live.js`;
 
   <section id="live-result"></section>
 
+  <section class="live-tts">
+    <label class="live-label" for="live-tts-voice">{t.live.tts.voiceSelector}</label>
+    <select id="live-tts-voice">
+      <option value="auto" selected>{t.live.tts.auto}</option>
+      <option value="en">{t.live.tts.en}</option>
+      <option value="de">{t.live.tts.de}</option>
+    </select>
+    <p class="live-hint">{t.live.tts.note}</p>
+    <p id="live-tts-status" class="live-status" role="status"></p>
+  </section>
+
   <section class="live-session">
-    <h2>{t.live.session.title}</h2>
+    <div class="session-header">
+      <h2>{t.live.session.title}</h2>
+      <button type="button" id="live-tts-read-all" class="live-export">{t.live.tts.button}</button>
+    </div>
     <ul id="live-findings" class="session-list"></ul>
     <div class="session-actions">
       <button type="button" id="live-export" class="live-export">{t.live.export}</button>

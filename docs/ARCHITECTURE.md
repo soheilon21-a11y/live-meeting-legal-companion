@@ -17,6 +17,7 @@
 3. **Live transcription (Phase 4a):** browser `MediaRecorder` captures 15-second chunks → `POST /chunk` (saved to disk, then enqueued) → background worker transcribes each chunk → the page polls `/transcript/live` for new entries.
 4. **Automatic observations (Phase 4b):** while recording, the page polls `/observations?since=<last_chunk_index>` every 10 seconds → `observer.check_recent_transcript` reads only the new transcript entries and retrieves the top-3 passages (K=3) → a new observation is stored in `data/observations/<session_id>.json` and rendered as a non-blocking, dismissible card.
 5. **Speaker diarization (Phase 4c):** after the meeting, `POST /diarize` reads the stored `chunk_*.webm` files, extracts one SpeechBrain ECAPA-TDNN embedding per chunk, clusters them with scikit-learn `AgglomerativeClustering` (cosine affinity), and writes a `speaker` label onto each transcript entry matched by `chunk_index`. The user can override any label via `POST /correct-speaker`.
+6. **Text-to-speech (Phase 5a):** the page sends a finding's text (plus a `lang`) to `POST /session/{id}/speak`; `tts.speak` synthesizes it with the local Piper voice and returns WAV bytes, which the browser plays. Audio is streamed and never stored. This only reads existing findings — the RAG/LLM pipeline is untouched.
 
 ## Services
 
@@ -33,6 +34,7 @@
 - `app/services/observation_store.py` — per-session JSON observation store (`data/observations/<session_id>.json`): add / get / dismiss (dismiss marks `dismissed=true`, never deletes).
 - `app/services/observer.py` — `check_recent_transcript(session_id, since_index, document_id)`: reads only new transcript entries (`chunk_index > since_index`), caps the excerpt at ~2000 chars, runs retrieval (K=3), and returns at most one retrieval-based observation (no LLM call).
 - `app/services/diarization.py` — speaker diarization: one SpeechBrain ECAPA-TDNN embedding per stored audio chunk, clustered with scikit-learn `AgglomerativeClustering` (cosine affinity, `distance_threshold` for 2-6 speakers, or a user-specified speaker count), then mapped to "Speaker N" labels in order of first appearance. Gracefully errors if `speechbrain`/`scikit-learn` are missing, if fewer than 2 chunks exist, or if the model cannot be downloaded.
+- `app/services/tts.py` — local text-to-speech with Piper (CPU, offline). A lazy singleton loads one voice model per language (EN: `en_US-lessac-medium`, DE: `de_DE-thorsten-medium`) from `models/piper/` and reuses it. `speak(text, lang)` returns WAV bytes; unsupported languages fall back to EN, input is truncated at ~500 chars, and a clear error is raised if `piper-tts` or the voice model is missing.
 
 ## Live transcription worker (Phase 4a)
 
@@ -68,3 +70,11 @@ Diarization is **post-meeting and user-initiated** — it never runs automatical
 - **Full-meeting capture (opt-in):** requires a Country Check and recorded collective consent for the session. The backend refuses capture in code (`403`) without a consent record.
 
 The country check is informational only, not legal advice (see `SCOPE.md` and `SECURITY.md`).
+
+## Text-to-speech (Phase 5a)
+
+TTS is a read-only audio output of existing findings — it never modifies the RAG or LLM flow.
+
+- `POST /api/live/session/{session_id}/speak` accepts `{"text": "...", "lang": "en"|"de"}`, validates non-empty text and session existence (404/400), then calls `tts.speak`. Returns `audio/wav` bytes with a `X-Audio-Truncated` header when the input exceeded ~500 characters.
+- Piper runs locally on CPU inside the app container; voice models (`en_US-lessac-medium`, `de_DE-thorsten-medium`) live in `models/piper/` and are downloaded once via `scripts/download_models.py`.
+- If `piper-tts` is not installed or a voice model is missing, the endpoint returns `503` with a clear message. Audio is streamed and not persisted.

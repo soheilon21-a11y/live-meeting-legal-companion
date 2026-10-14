@@ -17,6 +17,10 @@ const transcriptWrap = $("live-transcript-wrap"), transcriptList = $("live-trans
 const copyToPointBtn = $("live-copy-to-point");
 const diarizeBtn = $("live-diarize"), diarizeSummary = $("live-diarize-summary"), diarizeNote = $("live-diarize-note");
 let speakersDetected = 0;
+const ttsVoice = $("live-tts-voice"), ttsStatus = $("live-tts-status");
+const ttsReadAll = $("live-tts-read-all");
+let lastFindings = [];
+let currentAudio = null;
 
 function el(tag, cls, text) {
   const n = document.createElement(tag);
@@ -47,19 +51,28 @@ function renderFinding(f) {
     card.appendChild(el("p", "finding-label", I18N.suggestedLabel));
     card.appendChild(el("p", "finding-suggested", f.suggested_question));
   }
+  const speakBtn = el("button", "live-tts-button", I18N.ttsButton);
+  speakBtn.type = "button";
+  speakBtn.addEventListener("click", () => speakAloud(findingSpeechText(f)));
+  card.appendChild(speakBtn);
   resultEl.appendChild(card);
 }
 
 function renderFindings(items) {
+  lastFindings = items || [];
   findingsEl.replaceChildren();
-  if (!items.length) {
+  if (!lastFindings.length) {
     findingsEl.appendChild(el("li", "finding-empty", I18N.sessionEmpty));
     return;
   }
-  for (const f of items) {
+  for (const f of lastFindings) {
     const li = el("li", "finding-item");
     li.appendChild(el("span", "finding-item-issue", f.issue_question || "—"));
     li.appendChild(badge(f.evidence_status));
+    const speakBtn = el("button", "live-tts-button", I18N.ttsButton);
+    speakBtn.type = "button";
+    speakBtn.addEventListener("click", () => speakAloud(findingSpeechText(f)));
+    li.appendChild(speakBtn);
     findingsEl.appendChild(li);
   }
 }
@@ -72,6 +85,55 @@ async function loadFindings() {
     renderFindings(d.findings || []);
   } catch (e) {
     renderFindings([]);
+  }
+}
+
+function findingSpeechText(f) {
+  const parts = [];
+  if (f.issue_question) parts.push(f.issue_question);
+  if (f.verbatim_passage) parts.push(f.verbatim_passage);
+  if (f.suggested_question) parts.push(f.suggested_question);
+  return parts.join(". ");
+}
+
+function detectLang(text) {
+  if (/[äöüßÄÖÜ]/.test(text)) return "de";
+  if (/\b(der|die|das|und|ist|nicht|werden|eine|einer|einen|wird|sind|oder|von|mit|zu|den|dem|des|sich|nach|auch|bei|für|auf|als|ein|im|zum|zur|kann|können|müssen|soll|über)\b/i.test(text)) return "de";
+  return "en";
+}
+
+async function speakAloud(text) {
+  const content = (text || "").trim();
+  if (!content) {
+    ttsStatus.textContent = I18N.ttsEmpty;
+    return;
+  }
+  if (!sessionId) {
+    ttsStatus.textContent = I18N.uploadFirst;
+    return;
+  }
+  let lang = ttsVoice.value;
+  if (lang === "auto") lang = detectLang(content);
+  const spoken = content + " " + I18N.disclaimer;
+  ttsStatus.textContent = "";
+  try {
+    const r = await fetch(`${API}/api/live/session/${sessionId}/speak`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: spoken, lang }),
+    });
+    if (!r.ok) {
+      const d = await r.json().catch(() => ({}));
+      ttsStatus.textContent = d.detail || I18N.ttsError;
+      return;
+    }
+    const blob = await r.blob();
+    const url = URL.createObjectURL(blob);
+    if (currentAudio) currentAudio.pause();
+    currentAudio = new Audio(url);
+    await currentAudio.play();
+  } catch (e) {
+    ttsStatus.textContent = I18N.ttsError;
   }
 }
 
@@ -322,6 +384,11 @@ copyToPointBtn.addEventListener("click", () => {
   const text = transcript.map((s) => s.text).filter(Boolean).join("\n");
   pointInput.value = text;
   audioStatus.textContent = I18N.copied;
+});
+
+ttsReadAll.addEventListener("click", () => {
+  const text = (lastFindings || []).map(findingSpeechText).filter(Boolean).join(" ");
+  speakAloud(text);
 });
 
 exportBtn.addEventListener("click", () => {

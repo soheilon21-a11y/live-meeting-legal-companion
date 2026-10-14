@@ -7,8 +7,7 @@ Safe to re-run: already-cached models are skipped.
 from __future__ import annotations
 
 import os
-import subprocess
-import sys
+import urllib.request
 from pathlib import Path
 
 os.environ["HF_HUB_OFFLINE"] = "0"
@@ -21,6 +20,11 @@ WHISPER_REPO = "Systran/faster-whisper-small"
 PIPER_VOICES = {
     "English": "en_US-lessac-medium",
     "German": "de_DE-thorsten-medium",
+}
+PIPER_BASE_URL = "https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/"
+PIPER_VOICE_FILES = {
+    "en_US-lessac-medium": "en/en_US/lessac/medium/en_US-lessac-medium",
+    "de_DE-thorsten-medium": "de/de_DE/thorsten/medium/de_DE-thorsten-medium",
 }
 
 results = {}
@@ -104,23 +108,27 @@ def download_piper() -> None:
     try:
         import piper  # noqa: F401
     except ImportError:
-        print("  piper-tts is NOT installed - skipping automatic TTS voice download.")
-        print("  To cache the voices manually:")
+        print("  piper-tts is NOT installed — skipping automatic TTS voice download.")
+        print("  To enable TTS:")
         print("    1) pip install piper-tts")
-        print("    2) python -m piper.download_voices en_US-lessac-medium de_DE-thorsten-medium")
-        print("       (or grab the .onnx + .onnx.json pairs from rhasspy/piper-voices)")
-        fail("piper TTS voices (en_US-lessac-medium, de_DE-thorsten-medium)",
-             "piper-tts not installed")
+        print("    2) re-run this script to download the voices")
+        fail(
+            "piper TTS voices (en_US-lessac-medium, de_DE-thorsten-medium)",
+            "piper-tts not installed",
+        )
         return
 
     try:
         piper_dir.mkdir(parents=True, exist_ok=True)
-        voices = list(PIPER_VOICES.values())
-        print("  Voices:", ", ".join(voices))
-        subprocess.run(
-            [sys.executable, "-m", "piper.download_voices", *voices],
-            check=True,
-        )
+        for voice_name, rel in PIPER_VOICE_FILES.items():
+            for suffix in (".onnx", ".onnx.json"):
+                dest = piper_dir / (voice_name + suffix)
+                if dest.exists() and dest.stat().st_size > 0:
+                    print(f"  [SKIP] {dest.name} (already cached)")
+                    continue
+                url = PIPER_BASE_URL + rel + suffix
+                print(f"  Downloading {url}")
+                urllib.request.urlretrieve(url, dest)
         ok("piper TTS voices  ->  " + str(piper_dir))
     except Exception as exc:
         fail("piper TTS voices", exc)

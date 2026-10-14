@@ -713,6 +713,45 @@ section h2 {
   margin-top: 1rem;
 }
 
+/* Text-to-speech (Phase 5a) */
+.live-tts {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  border: 1px solid var(--muted);
+  background: #fff;
+}
+
+.live-tts select {
+  font: inherit;
+  padding: 0.4rem;
+  border: 1px solid var(--muted);
+  background: #fff;
+}
+
+.session-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.live-tts-button {
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--accent);
+  background: #fff;
+  color: var(--accent);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.live-tts-button:hover {
+  background: var(--accent);
+  color: var(--bg);
+}
+
 /* Live Meeting (Phase 4a) */
 .live-meeting {
   margin: 1.5rem 0;
