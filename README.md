@@ -10,6 +10,7 @@ A local, privacy-first meeting companion for legal professionals. Niyosh retriev
 - Findings are kept in a per-session history, can be exported as PDF, and can be deleted at any time.
 - **Audio capture (Phase 3):** two modes — see below.
 - **Live Meeting (Phase 4a):** record the meeting and see a live transcript with a 30-90 second delay — two modes: dictation-only (always available) and full meeting (consent required).
+- **Speaker attribution (Phase 4c):** after a meeting, assign an approximate "Speaker N" label to each 15-second transcript chunk (local SpeechBrain ECAPA-TDNN + clustering), then manually correct any label.
 - The human legal professional is the sole decision-maker. Niyosh retrieves and drafts; it never decides.
 
 ## Audio capture (Phase 3)
@@ -30,9 +31,15 @@ Record the meeting from the Live page and watch a live transcript appear — wit
 
 Audio is captured in 15-second chunks, saved to disk first, then transcribed sequentially by a single background worker. Raw audio is never deleted automatically — you decide via the existing delete-session action.
 
+## Speaker attribution (Phase 4c)
+
+After a meeting, the "Speaker attribution" button runs local speaker diarization over the session's stored audio chunks and labels each transcript entry "Speaker 1", "Speaker 2", ... (one label per 15-second chunk — an **approximation**, not per utterance). The labels are shown beside each transcript entry and can be corrected by hand. This runs only on already-captured, consent-gated audio — no new capture, no cloud.
+
+> Speaker labels are approximate — verify against the audio.
+
 ## What it is not
 
-- No speaker diarization, no real-time streaming transcription (live transcription is chunked, 30-90 s delay), no TTS, no video.
+- No real-time streaming transcription (live transcription is chunked, 30-90 s delay), no TTS, no video.
 - No autonomous decisions, no legal advice, no compliance verdicts.
 - No cloud, no paid APIs, no telemetry — everything runs on your machine.
 
@@ -42,6 +49,7 @@ Audio is captured in 15-second chunks, saved to disk first, then transcribed seq
 - Ollama (Llama 3, local inference)
 - ChromaDB + sentence-transformers (RAG)
 - faster-whisper (optional, local CPU speech-to-text)
+- SpeechBrain ECAPA-TDNN + scikit-learn (optional, local CPU speaker diarization)
 - Docker Compose
 - pytest + GitHub Actions (CI)
 - Astro static site (EN/DE)
