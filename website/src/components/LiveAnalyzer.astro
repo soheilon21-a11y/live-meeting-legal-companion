@@ -1,4 +1,6 @@
 ---
+import LiveMeeting from './LiveMeeting.astro';
+
 const { t } = Astro.props;
 const scriptSrc = `${import.meta.env.BASE_URL}/live.js`;
 ---
@@ -37,6 +39,8 @@ const scriptSrc = `${import.meta.env.BASE_URL}/live.js`;
   <p class="live-subtitle">{t.live.subtitle}</p>
 
   <p class="disclaimer">{t.live.disclaimer}</p>
+
+  <LiveMeeting t={t} />
 
   <section class="live-setup">
     <h2>{t.live.consent.sectionTitle}</h2>

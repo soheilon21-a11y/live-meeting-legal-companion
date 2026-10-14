@@ -21,6 +21,8 @@ def _load_model():
 
 def transcribe_audio(file_bytes: bytes) -> dict:
     model = _load_model()
-    segments, info = model.transcribe(BytesIO(file_bytes), beam_size=5)
+    segments, info = model.transcribe(
+        BytesIO(file_bytes), beam_size=settings.LIVE_WHISPER_BEAM_SIZE
+    )
     text = "".join(segment.text for segment in segments).strip()
     return {"text": text, "language": info.language}

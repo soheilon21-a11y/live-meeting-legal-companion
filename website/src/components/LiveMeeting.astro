@@ -1,0 +1,50 @@
+---
+const { t } = Astro.props;
+---
+
+<section
+  class="live-meeting"
+  data-start={t.live.meeting.start}
+  data-stop={t.live.meeting.stop}
+  data-recording={t.live.meeting.recording}
+  data-processing={t.live.meeting.processing}
+  data-idle={t.live.meeting.idle}
+  data-transcript-title={t.live.meeting.transcriptTitle}
+  data-delay-note={t.live.meeting.delayNote}
+  data-mic-denied={t.live.meeting.micPermissionDenied}
+  data-err-consent={t.live.meeting.errConsent}
+  data-error-chunk={t.live.meeting.errorChunk}
+  data-no-session={t.live.meeting.noSession}
+>
+  <h2>{t.live.meeting.title}</h2>
+
+  <fieldset class="audio-mode">
+    <legend class="live-label">{t.live.meeting.modeLabel}</legend>
+    <label class="audio-mode-option">
+      <input type="radio" name="meeting-mode" value="full" />
+      <span>{t.live.meeting.mode.full}</span>
+      <span class="live-hint">{t.live.meeting.mode.fullHint}</span>
+    </label>
+    <label class="audio-mode-option">
+      <input type="radio" name="meeting-mode" value="dictation" checked />
+      <span>{t.live.meeting.mode.dictation}</span>
+      <span class="live-hint">{t.live.meeting.mode.dictationHint}</span>
+    </label>
+  </fieldset>
+
+  <div class="meeting-actions">
+    <button type="button" id="meeting-start" class="live-analyze">{t.live.meeting.start}</button>
+    <button type="button" id="meeting-stop" class="live-delete" hidden>{t.live.meeting.stop}</button>
+    <span id="meeting-status" class="meeting-status status-idle" role="status" aria-live="polite">
+      <span class="status-dot" aria-hidden="true"></span>
+      <span class="status-text" id="meeting-status-text">{t.live.meeting.idle}</span>
+    </span>
+  </div>
+
+  <p class="live-hint delay-note" id="meeting-delay" hidden>{t.live.meeting.delayNote}</p>
+
+  <section id="meeting-transcript-wrap" hidden>
+    <h3>{t.live.meeting.transcriptTitle}</h3>
+    <ul id="meeting-transcript" class="transcript-list"></ul>
+  </section>
+</section>

@@ -14,6 +14,7 @@
 
 1. **Live analysis (Phase 2):** upload a reference contract → ingest (extract text, chunk, embed) → manual discussion point → verbatim retrieval (RAG) → LLM-grounded, cited finding ("draft — review required").
 2. **Audio capture (Phase 3):** dictation-only mode (default) or full-meeting capture (opt-in, behind a country check + hard consent gate) → local transcription (faster-whisper) → transcript appended to the session → transcript may feed `transcript_excerpt` into retrieval context.
+3. **Live transcription (Phase 4a):** browser `MediaRecorder` captures 15-second chunks → `POST /chunk` (saved to disk, then enqueued) → background worker transcribes each chunk → the page polls `/transcript/live` for new entries.
 
 ## Services
 
@@ -26,6 +27,16 @@
 - `app/services/consent_store.py` — append-only JSONL consent log (`data/consent.jsonl`), owner-only permissions, GDPR erasure.
 - `app/services/country_check.py` — static, informational recording-rules lookup per country.
 - `app/services/transcription.py` — faster-whisper (local, CPU) batch transcription with a graceful error if not installed.
+- `app/services/live_worker.py` — background live-transcription worker (see below).
+
+## Live transcription worker (Phase 4a)
+
+Live audio is transcribed by a single background thread:
+
+- `queue.Queue(maxsize=LIVE_MAX_QUEUE)` holds pending chunks; the endpoint enqueues and returns immediately, so the browser is never blocked.
+- A `threading.Thread` (daemon) dequeues chunks one at a time and calls `transcription.transcribe_audio`, then appends the result to the session transcript (`mode: "live"`).
+- A module-level `threading.Lock` (`model_lock`) is shared with `analysis.analyze` so ASR and the LLM never run concurrently (8 GB RAM constraint).
+- If the queue is full, new chunks are saved to disk and tracked as a **backlog**, reported by the status endpoint and drained on `stop`.
 
 ## Audio capture modes (Phase 3)
 

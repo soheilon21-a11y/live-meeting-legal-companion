@@ -21,7 +21,8 @@ from app.api.models import (
     TranscriptResponse,
     UploadResponse,
 )
-from app.services import analysis, consent_store, country_check, ingest, session_store, transcription
+from app.core.config import settings
+from app.services import analysis, consent_store, country_check, ingest, live_worker, session_store, transcription
 
 router = APIRouter(prefix="/api/live", tags=["live"])
 
@@ -178,6 +179,61 @@ def get_transcript(session_id: str) -> TranscriptResponse:
         raise HTTPException(status_code=404, detail="Unknown session")
     transcript = session_store.get_transcript(session_id)
     return TranscriptResponse(session_id=session_id, transcript=transcript)
+
+
+@router.post("/session/{session_id}/chunk")
+def upload_chunk(
+    session_id: str,
+    chunk_index: int = Form(...),
+    mode: str = Form(...),
+    file: UploadFile = File(...),
+) -> dict:
+    if session_store.load_session(session_id) is None:
+        raise HTTPException(status_code=404, detail="Unknown session")
+    if mode == "full" and not consent_store.has_consent(session_id):
+        raise HTTPException(
+            status_code=403,
+            detail="Audio capture refused: no recorded consent",
+        )
+    if mode not in ("full", "dictation"):
+        raise HTTPException(status_code=400, detail="Unknown mode")
+
+    content = file.file.read()
+    audio_dir = settings.DATA_DIR / "audio" / session_id
+    audio_dir.mkdir(parents=True, exist_ok=True)
+    (audio_dir / f"chunk_{chunk_index}.webm").write_bytes(content)
+
+    result = live_worker.enqueue_chunk(session_id, chunk_index, content)
+    live_worker.mark_recording(session_id, True)
+    return {"chunk_index": chunk_index, "status": result}
+
+
+@router.get("/session/{session_id}/transcript/live")
+def live_transcript(session_id: str, since: int = 0) -> dict:
+    if session_store.load_session(session_id) is None:
+        raise HTTPException(status_code=404, detail="Unknown session")
+    entries = [
+        entry
+        for entry in session_store.get_transcript(session_id)
+        if entry.get("chunk_index", 0) > since
+    ]
+    return {"session_id": session_id, "transcript": entries}
+
+
+@router.get("/session/{session_id}/status")
+def status(session_id: str) -> dict:
+    if session_store.load_session(session_id) is None:
+        raise HTTPException(status_code=404, detail="Unknown session")
+    return live_worker.status(session_id)
+
+
+@router.post("/session/{session_id}/stop")
+def stop(session_id: str) -> dict:
+    if session_store.load_session(session_id) is None:
+        raise HTTPException(status_code=404, detail="Unknown session")
+    live_worker.mark_recording(session_id, False)
+    flushed = live_worker.flush(session_id)
+    return {**live_worker.status(session_id), "flushed": flushed}
 
 
 @router.get("/session/{session_id}/findings", response_model=SessionFindings)

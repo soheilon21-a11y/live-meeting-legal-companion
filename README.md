@@ -9,6 +9,7 @@ A local, privacy-first meeting companion for legal professionals. Niyosh retriev
 - It returns a compact, cited finding: a passage, a narrowly stated issue as a question, an evidence status (supported / conflicting / insufficient), and a suggested question to raise — labelled "draft — review required".
 - Findings are kept in a per-session history, can be exported as PDF, and can be deleted at any time.
 - **Audio capture (Phase 3):** two modes — see below.
+- **Live Meeting (Phase 4a):** record the meeting and see a live transcript with a 30-90 second delay — two modes: dictation-only (always available) and full meeting (consent required).
 - The human legal professional is the sole decision-maker. Niyosh retrieves and drafts; it never decides.
 
 ## Audio capture (Phase 3)
@@ -20,9 +21,18 @@ Audio capture is available in two modes:
 
 > The country check is **informational only — not legal advice.** The user is responsible for verifying local recording laws (e.g. § 201 StGB in Germany) before using audio capture. See `docs/SCOPE.md` and `docs/SECURITY.md`.
 
+## Live Meeting (Phase 4a)
+
+Record the meeting from the Live page and watch a live transcript appear — with a 30-90 second delay (this is normal; transcription is near-real-time, not streaming). Two modes:
+
+- **Dictation only (my voice — always available).** No consent required.
+- **Full meeting (all voices — consent required).** The backend refuses capture (`403`) without recorded consent for the session.
+
+Audio is captured in 15-second chunks, saved to disk first, then transcribed sequentially by a single background worker. Raw audio is never deleted automatically — you decide via the existing delete-session action.
+
 ## What it is not
 
-- No speaker diarization, no real-time streaming transcription (batch only), no TTS, no video.
+- No speaker diarization, no real-time streaming transcription (live transcription is chunked, 30-90 s delay), no TTS, no video.
 - No autonomous decisions, no legal advice, no compliance verdicts.
 - No cloud, no paid APIs, no telemetry — everything runs on your machine.
 

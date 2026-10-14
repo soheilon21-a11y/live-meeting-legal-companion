@@ -19,6 +19,9 @@ class Settings:
     TOP_K = 3
 
     LIVE_WHISPER_MODEL = os.getenv("LIVE_WHISPER_MODEL", "small")
+    LIVE_WHISPER_BEAM_SIZE = int(os.getenv("LIVE_WHISPER_BEAM_SIZE", "1"))
+    LIVE_CHUNK_SECONDS = int(os.getenv("LIVE_CHUNK_SECONDS", "15"))
+    LIVE_MAX_QUEUE = int(os.getenv("LIVE_MAX_QUEUE", "3"))
 
 
 settings = Settings()
