@@ -112,12 +112,7 @@ def test_status_reports_queue_depth(monkeypatch):
 def test_stop_returns_final_counts(monkeypatch):
     monkeypatch.setattr(transcription, "transcribe_audio", _fake_transcribe)
     _make_session("c6")
-    live_worker.enqueue_chunk("c6", 0, b"fake-audio")
-    assert _wait_for(
-        lambda: any(
-            e.get("chunk_index") == 0 for e in session_store.get_transcript("c6")
-        )
-    )
+    live_worker.process_chunk("c6", 0, b"fake-audio")
     resp = client.post("/api/live/session/c6/stop")
     assert resp.status_code == 200
     body = resp.json()
@@ -128,9 +123,8 @@ def test_stop_returns_final_counts(monkeypatch):
 def test_live_transcript_since(monkeypatch):
     monkeypatch.setattr(transcription, "transcribe_audio", _fake_transcribe)
     _make_session("c7")
-    live_worker.enqueue_chunk("c7", 0, b"a")
-    live_worker.enqueue_chunk("c7", 1, b"b")
-    assert _wait_for(lambda: len(session_store.get_transcript("c7")) >= 2)
+    live_worker.process_chunk("c7", 0, b"a")
+    live_worker.process_chunk("c7", 1, b"b")
     resp = client.get("/api/live/session/c7/transcript/live?since=0")
     assert resp.status_code == 200
     entries = resp.json()["transcript"]

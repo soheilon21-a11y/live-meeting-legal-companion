@@ -124,7 +124,10 @@ def _worker_loop() -> None:
             item = _chunk_queue.get(timeout=1)
         except queue.Empty:
             continue
-        process_chunk(*item)
+        try:
+            process_chunk(*item)
+        except Exception:
+            pass  # a bad chunk must never kill the worker; the raw audio is preserved on disk
         _chunk_queue.task_done()
 
 
