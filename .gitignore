@@ -15,6 +15,7 @@ dist/
 chroma_data/
 uploads/
 backend/data/
+models/
 
 # Logs
 *.log
