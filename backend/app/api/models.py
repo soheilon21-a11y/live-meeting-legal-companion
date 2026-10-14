@@ -81,3 +81,12 @@ class DictationResponse(BaseModel):
 class TranscriptResponse(BaseModel):
     session_id: str
     transcript: list[dict]
+
+
+class DiarizeRequest(BaseModel):
+    expected_speakers: Optional[int] = None
+
+
+class CorrectSpeakerRequest(BaseModel):
+    chunk_index: int
+    speaker: str

@@ -14,7 +14,9 @@ from app.api.models import (
     AnalyzeResponse,
     ConsentRequest,
     ConsentResponse,
+    CorrectSpeakerRequest,
     DictationResponse,
+    DiarizeRequest,
     Finding,
     Observation,
     ObservationsResponse,
@@ -28,6 +30,7 @@ from app.services import (
     analysis,
     consent_store,
     country_check,
+    diarization,
     ingest,
     live_worker,
     observation_store,
@@ -191,6 +194,46 @@ def get_transcript(session_id: str) -> TranscriptResponse:
         raise HTTPException(status_code=404, detail="Unknown session")
     transcript = session_store.get_transcript(session_id)
     return TranscriptResponse(session_id=session_id, transcript=transcript)
+
+
+@router.post("/session/{session_id}/diarize")
+def diarize(session_id: str, body: DiarizeRequest | None = None) -> dict:
+    if session_store.load_session(session_id) is None:
+        raise HTTPException(status_code=404, detail="Unknown session")
+    expected = None
+    if body is not None and body.expected_speakers is not None:
+        expected = body.expected_speakers
+        if not 2 <= expected <= 6:
+            raise HTTPException(
+                status_code=400, detail="expected_speakers must be between 2 and 6"
+            )
+    try:
+        chunk_speakers = diarization.diarize(session_id, expected)
+    except diarization.DiarizationError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
+    session_store.apply_speakers(session_id, chunk_speakers)
+    return {
+        "session_id": session_id,
+        "speakers_detected": len(set(chunk_speakers.values())),
+        "transcript": session_store.get_transcript(session_id),
+    }
+
+
+@router.post("/session/{session_id}/correct-speaker")
+def correct_speaker(session_id: str, body: CorrectSpeakerRequest) -> dict:
+    if session_store.load_session(session_id) is None:
+        raise HTTPException(status_code=404, detail="Unknown session")
+    speaker = body.speaker.strip()
+    if not speaker:
+        raise HTTPException(status_code=400, detail="speaker must not be empty")
+    updated = session_store.set_speaker(session_id, body.chunk_index, speaker)
+    return {
+        "session_id": session_id,
+        "chunk_index": body.chunk_index,
+        "speaker": speaker,
+        "updated": updated,
+        "transcript": session_store.get_transcript(session_id),
+    }
 
 
 @router.post("/session/{session_id}/chunk")

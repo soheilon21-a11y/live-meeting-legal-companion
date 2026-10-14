@@ -42,9 +42,17 @@ While the meeting is being transcribed, Niyosh periodically checks the **new** t
 - **Auditable:** observations are stored locally in per-session JSON (`data/observations/<session_id>.json`). Dismissing an observation marks it `dismissed=true` for the audit trail — it is never deleted.
 - **Deterministic and local:** the check is retrieval-only (no LLM call); it reuses the existing RAG and makes no external requests.
 
-## What v1 / Phase 3 / Phase 4a / Phase 4b do NOT do
+## What Phase 4c adds (speaker diarization)
 
-- No speaker diarization (Phase 4c).
+After a meeting, the user can run **speaker attribution** over the session's already-captured audio chunks. Each 15-second chunk is assigned a single speaker label ("Speaker 1", "Speaker 2", ...) using local SpeechBrain ECAPA-TDNN speaker embeddings clustered with scikit-learn `AgglomerativeClustering` (cosine affinity).
+
+- **Approximate by design:** one label per **chunk** (≈15 s), not per utterance. If two speakers alternate within a single chunk, only the dominant voice is labelled. Labels are honestly disclosed as approximate.
+- **Manual correction:** the user can override any entry's speaker label (dropdown, or "Unknown") — the human decides, never the tool.
+- **Privacy-preserving:** diarization runs only on audio that was already captured behind the Phase 3 consent gate; it makes no new capture and no external requests. Raw audio is never deleted automatically.
+- **Local & sanctions-safe:** SpeechBrain ECAPA-TDNN is Apache-2.0 and ungated (no HuggingFace gating).
+
+## What v1 / Phase 3 / Phase 4a / Phase 4b / Phase 4c do NOT do
+
 - No real-time streaming transcription — live transcription is chunked, near-real-time (30-90 s delay), not streaming.
 - No text-to-speech.
 - No video.

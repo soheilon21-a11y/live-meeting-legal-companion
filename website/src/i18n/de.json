@@ -160,6 +160,14 @@
       "dismiss": "Ausblenden",
       "empty": "Noch keine Beobachtungen.",
       "excerptLabel": "Transkript-Auszug"
+    },
+    "diarization": {
+      "button": "Sprecherzuordnung",
+      "summary": "N Sprecher erkannt",
+      "speaker": "Sprecher N",
+      "unknown": "Unbekannt",
+      "error": "Diarisierung nicht verfügbar",
+      "approximate": "Sprecherzuordnung ist ungefähr — mit Audio abgleichen"
     }
   },
   "footer": {

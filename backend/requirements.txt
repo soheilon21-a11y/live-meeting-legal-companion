@@ -8,3 +8,5 @@ python-docx==1.1.2
 reportlab==5.0.0
 python-multipart==0.0.32
 numpy==1.26.4
+scikit-learn==1.7.2
+speechbrain==1.1.1

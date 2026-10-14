@@ -160,6 +160,14 @@
       "dismiss": "Dismiss",
       "empty": "No observations yet.",
       "excerptLabel": "Transcript excerpt"
+    },
+    "diarization": {
+      "button": "Speaker attribution",
+      "summary": "N speakers detected",
+      "speaker": "Speaker N",
+      "unknown": "Unknown",
+      "error": "Diarization engine not available",
+      "approximate": "Speaker labels are approximate — verify against the audio"
     }
   },
   "footer": {
