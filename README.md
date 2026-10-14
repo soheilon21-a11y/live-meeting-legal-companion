@@ -11,6 +11,7 @@ A local, privacy-first meeting companion for legal professionals. Niyosh retriev
 - **Audio capture (Phase 3):** two modes — see below.
 - **Live Meeting (Phase 4a):** record the meeting and see a live transcript with a 30-90 second delay — two modes: dictation-only (always available) and full meeting (consent required).
 - **Speaker attribution (Phase 4c):** after a meeting, assign an approximate "Speaker N" label to each 15-second transcript chunk (local SpeechBrain ECAPA-TDNN + clustering), then manually correct any label.
+- **Text-to-speech (Phase 5a):** read findings aloud using local Piper TTS (EN + DE voices). A "Read aloud" button sits on each finding card and next to the session findings summary, with a voice selector (auto / English / German). The voice is synthetic and approximate; audio is streamed straight to the browser and never persisted.
 - The human legal professional is the sole decision-maker. Niyosh retrieves and drafts; it never decides.
 
 ## Audio capture (Phase 3)
@@ -39,9 +40,11 @@ After a meeting, the "Speaker attribution" button runs local speaker diarization
 
 ## What it is not
 
-- No real-time streaming transcription (live transcription is chunked, 30-90 s delay), no TTS, no video.
+- No real-time streaming transcription (live transcription is chunked, 30-90 s delay), no video.
 - No autonomous decisions, no legal advice, no compliance verdicts.
-- No cloud, no paid APIs, no telemetry — everything runs on your machine.
+- No cloud, no paid APIs, no telemetry — everything runs on your machine (TTS included: Piper is 100% local, CPU, offline).
+
+TTS audio is streamed directly and **not persisted** — if you want to save the spoken audio to a file, that is a future feature, not available in this phase.
 
 ## Stack
 
@@ -50,6 +53,7 @@ After a meeting, the "Speaker attribution" button runs local speaker diarization
 - ChromaDB + sentence-transformers (RAG)
 - faster-whisper (optional, local CPU speech-to-text)
 - SpeechBrain ECAPA-TDNN + scikit-learn (optional, local CPU speaker diarization)
+- Piper TTS (optional, local CPU text-to-speech, EN + DE)
 - Docker Compose
 - pytest + GitHub Actions (CI)
 - Astro static site (EN/DE)
@@ -63,6 +67,17 @@ pip install faster-whisper
 ```
 
 Without it, transcription endpoints return a clear error: "Transcription engine not available — install faster-whisper". The model size is configurable via the `LIVE_WHISPER_MODEL` env var (default `small`).
+
+## Optional: enable text-to-speech (Phase 5a)
+
+Text-to-speech uses [Piper](https://github.com/rhasspy/piper), a local, CPU-only neural TTS engine. Install it and download the two voice models (EN + DE, ~30-100 MB each) once:
+
+```bash
+pip install piper-tts
+python scripts/download_models.py
+```
+
+Voice models are cached under `models/piper/` (configurable via the `PIPER_MODEL_DIR` env var). The voice is synthetic and approximate. Without Piper (or a voice model), the "Read aloud" button returns a clear "TTS engine not available — install piper-tts" error.
 
 ## Quickstart
 

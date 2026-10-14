@@ -168,6 +168,16 @@
       "unknown": "Unknown",
       "error": "Diarization engine not available",
       "approximate": "Speaker labels are approximate — verify against the audio"
+    },
+    "tts": {
+      "button": "Read aloud",
+      "voiceSelector": "Voice",
+      "auto": "Auto",
+      "en": "English",
+      "de": "German",
+      "note": "TTS is generated locally — no cloud, no external requests",
+      "error": "TTS engine not available — install piper-tts",
+      "empty": "Text is empty — nothing to speak"
     }
   },
   "footer": {

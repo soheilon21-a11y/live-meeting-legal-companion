@@ -51,10 +51,19 @@ After a meeting, the user can run **speaker attribution** over the session's alr
 - **Privacy-preserving:** diarization runs only on audio that was already captured behind the Phase 3 consent gate; it makes no new capture and no external requests. Raw audio is never deleted automatically.
 - **Local & sanctions-safe:** SpeechBrain ECAPA-TDNN is Apache-2.0 and ungated (no HuggingFace gating).
 
-## What v1 / Phase 3 / Phase 4a / Phase 4b / Phase 4c do NOT do
+## What Phase 5a adds (text-to-speech with Piper)
+
+The Live page can now **read findings aloud** using local Piper TTS (EN + DE voices). A "Read aloud" button appears on each finding card and next to the session findings summary; a voice selector (auto / English / German) lets the user pick the voice, with "auto" detecting the finding's language.
+
+- **100% local:** Piper runs on-CPU inside the existing app container. No cloud, no external requests. TTS audio is streamed straight to the browser and **never persisted** (data minimization).
+- **Honest audio:** the voice is synthetic and approximate. The spoken text is the same verbatim finding shown on the page ("what you hear is what you read"), with the "Not legal advice" disclaimer appended. No studio-quality claims.
+- **Traceable & auditable:** the endpoint accepts only the finding text plus a language code; it truncates input at ~500 characters for audio-length management. The endpoint is testable — tests cover valid input, empty input, unsupported language, and engine-unavailable.
+- **Graceful degradation:** if Piper (or a voice model) is missing, the endpoint returns `503` with a clear "install piper-tts" message, shown to the user.
+- **Practical deployment:** voice models are small (~30-100 MB each) and downloaded **once** via `scripts/download_models.py` (`models/piper/`); `docker compose up` remains the entire install story. No new Docker services.
+
+## What v1 / Phase 3 / Phase 4a / Phase 4b / Phase 4c / Phase 5a do NOT do
 
 - No real-time streaming transcription — live transcription is chunked, near-real-time (30-90 s delay), not streaming.
-- No text-to-speech.
 - No video.
 - No autonomous decisions.
 - No legal advice.

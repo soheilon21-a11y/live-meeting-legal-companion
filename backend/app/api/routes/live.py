@@ -23,6 +23,7 @@ from app.api.models import (
     SessionFindings,
     TranscribeResponse,
     TranscriptResponse,
+    TTSRequest,
     UploadResponse,
 )
 from app.core.config import settings
@@ -37,6 +38,7 @@ from app.services import (
     observer,
     session_store,
     transcription,
+    tts,
 )
 
 router = APIRouter(prefix="/api/live", tags=["live"])
@@ -338,6 +340,23 @@ def dismiss_observation(session_id: str, obs_id: str) -> dict:
         if not obs.get("dismissed")
     ]
     return {"session_id": session_id, "observations": remaining}
+
+
+@router.post("/session/{session_id}/speak")
+def speak(session_id: str, body: TTSRequest) -> Response:
+    if session_store.load_session(session_id) is None:
+        raise HTTPException(status_code=404, detail="Unknown session")
+    text = (body.text or "").strip()
+    if not text:
+        raise HTTPException(status_code=400, detail=tts.EMPTY_TEXT)
+    try:
+        audio = tts.speak(text, body.lang)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
+    headers = {"X-Audio-Truncated": "true"} if len(text) > tts.MAX_CHARS else {}
+    return Response(content=audio, media_type="audio/wav", headers=headers)
 
 
 @router.get("/session/{session_id}/observations/all")

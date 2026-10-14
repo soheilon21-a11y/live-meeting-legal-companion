@@ -90,3 +90,8 @@ class DiarizeRequest(BaseModel):
 class CorrectSpeakerRequest(BaseModel):
     chunk_index: int
     speaker: str
+
+
+class TTSRequest(BaseModel):
+    text: str
+    lang: str = "en"
