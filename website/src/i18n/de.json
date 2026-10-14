@@ -153,6 +153,13 @@
       "errConsent": "Audioaufnahme verweigert: Keine aufgezeichnete Einwilligung für diese Sitzung.",
       "errorChunk": "Ein Audioabschnitt konnte nicht gesendet werden.",
       "noSession": "Laden Sie zuerst ein Dokument hoch, um eine Sitzung zu erstellen."
+    },
+    "observations": {
+      "title": "Beobachtungen",
+      "autoLabel": "automatisch — prüfpflichtig",
+      "dismiss": "Ausblenden",
+      "empty": "Noch keine Beobachtungen.",
+      "excerptLabel": "Transkript-Auszug"
     }
   },
   "footer": {

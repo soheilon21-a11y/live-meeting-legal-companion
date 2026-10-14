@@ -39,6 +39,23 @@ class SessionFindings(BaseModel):
     findings: list[Finding]
 
 
+class Observation(BaseModel):
+    obs_id: str
+    timestamp: str
+    issue_question: str
+    evidence_status: EvidenceStatus
+    suggested_question: Optional[str] = None
+    transcript_excerpt: str
+    dismissed: bool = False
+
+
+class ObservationsResponse(BaseModel):
+    session_id: str
+    observations: list[Observation]
+    all: list[Observation]
+    last_index: int
+
+
 class ConsentRequest(BaseModel):
     session_id: str
     country: str

@@ -153,6 +153,13 @@
       "errConsent": "Audio capture refused: no recorded consent for this session.",
       "errorChunk": "Failed to send an audio chunk.",
       "noSession": "Upload a document first to create a session."
+    },
+    "observations": {
+      "title": "Observations",
+      "autoLabel": "auto — review required",
+      "dismiss": "Dismiss",
+      "empty": "No observations yet.",
+      "excerptLabel": "Transcript excerpt"
     }
   },
   "footer": {

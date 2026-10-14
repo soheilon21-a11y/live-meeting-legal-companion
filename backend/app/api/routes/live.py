@@ -16,13 +16,25 @@ from app.api.models import (
     ConsentResponse,
     DictationResponse,
     Finding,
+    Observation,
+    ObservationsResponse,
     SessionFindings,
     TranscribeResponse,
     TranscriptResponse,
     UploadResponse,
 )
 from app.core.config import settings
-from app.services import analysis, consent_store, country_check, ingest, live_worker, session_store, transcription
+from app.services import (
+    analysis,
+    consent_store,
+    country_check,
+    ingest,
+    live_worker,
+    observation_store,
+    observer,
+    session_store,
+    transcription,
+)
 
 router = APIRouter(prefix="/api/live", tags=["live"])
 
@@ -243,6 +255,53 @@ def get_findings(session_id: str) -> SessionFindings:
         raise HTTPException(status_code=404, detail="Unknown session")
     findings = [Finding(**f) for f in session["findings"]]
     return SessionFindings(session_id=session_id, findings=findings)
+
+
+@router.get("/session/{session_id}/observations", response_model=ObservationsResponse)
+def get_observations(
+    session_id: str,
+    since: int = 0,
+    document_id: str | None = None,
+) -> ObservationsResponse:
+    if session_store.load_session(session_id) is None:
+        raise HTTPException(status_code=404, detail="Unknown session")
+    doc_id = document_id or session_id
+    result = observer.check_recent_transcript(session_id, since, doc_id)
+    new_observations = [
+        observation_store.add_observation(session_id, obs)
+        for obs in result["observations"]
+    ]
+    all_observations = [
+        obs
+        for obs in observation_store.get_observations(session_id)
+        if not obs.get("dismissed")
+    ]
+    return ObservationsResponse(
+        session_id=session_id,
+        observations=[Observation(**o) for o in new_observations],
+        all=[Observation(**o) for o in all_observations],
+        last_index=result["last_index"],
+    )
+
+
+@router.post("/session/{session_id}/observations/{obs_id}/dismiss")
+def dismiss_observation(session_id: str, obs_id: str) -> dict:
+    if session_store.load_session(session_id) is None:
+        raise HTTPException(status_code=404, detail="Unknown session")
+    observation_store.dismiss_observation(session_id, obs_id)
+    remaining = [
+        obs
+        for obs in observation_store.get_observations(session_id)
+        if not obs.get("dismissed")
+    ]
+    return {"session_id": session_id, "observations": remaining}
+
+
+@router.get("/session/{session_id}/observations/all")
+def all_observations(session_id: str) -> dict:
+    if session_store.load_session(session_id) is None:
+        raise HTTPException(status_code=404, detail="Unknown session")
+    return {"session_id": session_id, "observations": observation_store.get_observations(session_id)}
 
 
 @router.post("/session/{session_id}/export")

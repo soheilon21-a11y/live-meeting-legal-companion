@@ -751,3 +751,68 @@ section h2 {
   color: var(--accent);
   margin: 0.5rem 0;
 }
+
+/* Observations (Phase 4b) */
+.live-observations {
+  margin: 1.5rem 0;
+  padding: 1.25rem;
+  border: 1px solid var(--accent);
+  background: #fff;
+}
+
+.live-observations h2 {
+  font-family: var(--serif);
+  color: var(--accent);
+  margin: 0 0 1rem;
+  font-size: 1.4rem;
+}
+
+.observation-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0;
+}
+
+.observation-item {
+  border: 1px solid var(--muted);
+  padding: 0.75rem 1rem;
+  margin: 0.75rem 0;
+  background: #fff;
+}
+
+.observation-issue {
+  margin: 0.5rem 0;
+  color: var(--accent);
+  font-family: var(--serif);
+  font-size: 1.05rem;
+}
+
+.observation-excerpt {
+  margin: 0.25rem 0;
+  padding: 0.5rem 0.75rem;
+  border-left: 3px solid var(--accent);
+  background: #f3efe6;
+  font-size: 0.9rem;
+}
+
+.observation-suggested {
+  margin: 0.25rem 0;
+}
+
+.observation-dismiss {
+  font: inherit;
+  padding: 0.35rem 0.75rem;
+  margin-top: 0.5rem;
+  border: 1px solid var(--accent);
+  background: #fff;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.observation-dismiss:hover {
+  background: #f3efe6;
+}
+
+.observation-empty {
+  color: var(--muted);
+}

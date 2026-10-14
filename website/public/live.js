@@ -119,6 +119,11 @@ fileInput.addEventListener("change", async () => {
     consentStatus.textContent = "";
     statusEl.textContent = I18N.docReady;
     loadFindings();
+    obsLastIndex = -1;
+    lastObservations = [];
+    dismissedObsIds.clear();
+    observationsList.replaceChildren();
+    pollObservations();
   } catch (e) {
     statusEl.textContent = I18N.errUpload;
   }
@@ -265,6 +270,10 @@ deleteBtn.addEventListener("click", async () => {
   transcriptWrap.hidden = true;
   consentStatus.textContent = "";
   audioStatus.textContent = "";
+  obsLastIndex = -1;
+  lastObservations = [];
+  dismissedObsIds.clear();
+  observationsList.replaceChildren();
 });
 
 // --- Live Meeting (Phase 4a) ---
@@ -381,11 +390,13 @@ async function startRecording() {
   meetingTranscriptWrap.hidden = meetingTranscript.children.length === 0;
   setMeetingStatus("recording");
   pollTimer = setInterval(pollTranscript, 3000);
+  obsPollTimer = setInterval(pollObservations, 10000);
 }
 
 async function stopRecording() {
   if (mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
   if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+  if (obsPollTimer) { clearInterval(obsPollTimer); obsPollTimer = null; }
   isRecording = false;
   meetingStart.hidden = false;
   meetingStop.hidden = true;
@@ -405,3 +416,60 @@ async function stopRecording() {
 
 meetingStart.addEventListener("click", startRecording);
 meetingStop.addEventListener("click", stopRecording);
+
+// --- Observations (Phase 4b) ---
+const observationsList = $("live-observations");
+let obsLastIndex = -1;
+let obsPollTimer = null;
+let lastObservations = [];
+const dismissedObsIds = new Set();
+
+function renderObservations(items) {
+  observationsList.replaceChildren();
+  const visible = items.filter((o) => !o.dismissed && !dismissedObsIds.has(o.obs_id));
+  if (!visible.length) {
+    observationsList.appendChild(el("li", "observation-empty", I18N.obsEmpty));
+    return;
+  }
+  for (const o of visible) {
+    const li = el("li", "observation-item");
+    li.appendChild(el("span", "draft-label", I18N.obsAutoLabel));
+    li.appendChild(el("p", "observation-issue", o.issue_question || "—"));
+    if (o.transcript_excerpt) {
+      li.appendChild(el("p", "finding-label", I18N.obsExcerptLabel));
+      li.appendChild(el("blockquote", "observation-excerpt", o.transcript_excerpt));
+    }
+    li.appendChild(el("p", "finding-label", I18N.evidenceLabel));
+    li.appendChild(badge(o.evidence_status));
+    if (o.suggested_question) {
+      li.appendChild(el("p", "finding-label", I18N.suggestedLabel));
+      li.appendChild(el("p", "observation-suggested", o.suggested_question));
+    }
+    const dismissBtn = el("button", "observation-dismiss", I18N.obsDismiss);
+    dismissBtn.type = "button";
+    dismissBtn.addEventListener("click", () => dismissObservation(o.obs_id));
+    li.appendChild(dismissBtn);
+    observationsList.appendChild(li);
+  }
+}
+
+async function pollObservations() {
+  if (!sessionId) return;
+  try {
+    const r = await fetch(`${API}/api/live/session/${sessionId}/observations?since=${obsLastIndex}&document_id=${sessionId}`);
+    if (!r.ok) return;
+    const d = await r.json();
+    if (typeof d.last_index === "number") obsLastIndex = d.last_index;
+    lastObservations = d.all || [];
+    renderObservations(lastObservations);
+  } catch (e) {}
+}
+
+async function dismissObservation(obsId) {
+  if (!sessionId) return;
+  dismissedObsIds.add(obsId);
+  renderObservations(lastObservations);
+  try {
+    await fetch(`${API}/api/live/session/${sessionId}/observations/${obsId}/dismiss`, { method: "POST" });
+  } catch (e) {}
+}
