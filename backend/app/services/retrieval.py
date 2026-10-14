@@ -1,4 +1,4 @@
-from chromadb.errors import NotFoundError
+from chromadb.errors import InvalidCollectionException, NotFoundError
 
 from app.core.config import settings
 from app.services import embedding
@@ -8,7 +8,7 @@ from app.services.chroma_store import get
 def retrieve(document_id: str, query: str, k: int = settings.TOP_K) -> list[dict]:
     try:
         collection = get(document_id)
-    except NotFoundError:
+    except (InvalidCollectionException, NotFoundError):
         return []
     count = collection.count()
     if count == 0:
