@@ -266,3 +266,142 @@ deleteBtn.addEventListener("click", async () => {
   consentStatus.textContent = "";
   audioStatus.textContent = "";
 });
+
+// --- Live Meeting (Phase 4a) ---
+const meetingRoot = document.querySelector(".live-meeting");
+const MEET = meetingRoot ? meetingRoot.dataset : {};
+const meetingStart = $("meeting-start"), meetingStop = $("meeting-stop");
+const meetingStatus = $("meeting-status"), meetingStatusText = $("meeting-status-text");
+const meetingDelay = $("meeting-delay");
+const meetingTranscriptWrap = $("meeting-transcript-wrap"), meetingTranscript = $("meeting-transcript");
+
+let mediaRecorder = null;
+let mediaStream = null;
+let chunkIndex = 0;
+let lastSeenIndex = -1;
+let pollTimer = null;
+let isRecording = false;
+let recordingMode = "dictation";
+
+function setMeetingStatus(state, text) {
+  meetingStatus.className = "meeting-status status-" + state;
+  const labels = { recording: MEET.recording, processing: MEET.processing, idle: MEET.idle };
+  meetingStatusText.textContent = text || labels[state] || "";
+}
+
+function pickMimeType() {
+  if (!window.MediaRecorder) return "";
+  const types = ["audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus"];
+  for (const t of types) if (MediaRecorder.isTypeSupported(t)) return t;
+  return "";
+}
+
+async function checkConsent() {
+  try {
+    const r = await fetch(`${API}/api/live/consent/${sessionId}`);
+    if (!r.ok) return false;
+    const d = await r.json();
+    return (d.consents || []).some((c) => c.consent_given);
+  } catch (e) {
+    return false;
+  }
+}
+
+async function uploadChunk(blob, index) {
+  const form = new FormData();
+  form.append("file", blob, `chunk_${index}.webm`);
+  form.append("chunk_index", index);
+  form.append("mode", recordingMode);
+  try {
+    const r = await fetch(`${API}/api/live/session/${sessionId}/chunk`, { method: "POST", body: form });
+    if (r.status === 403) {
+      setMeetingStatus("idle", MEET.errConsent);
+      await stopRecording();
+      return;
+    }
+    if (!r.ok) {
+      setMeetingStatus("idle", MEET.errorChunk);
+      return;
+    }
+    const d = await r.json();
+    if (d.status === "backlogged") setMeetingStatus("processing");
+    else if (isRecording) setMeetingStatus("recording");
+  } catch (e) {
+    setMeetingStatus("idle", MEET.errorChunk);
+  }
+}
+
+async function pollTranscript() {
+  if (!sessionId) return;
+  try {
+    const r = await fetch(`${API}/api/live/session/${sessionId}/transcript/live?since=${lastSeenIndex}`);
+    if (!r.ok) return;
+    const d = await r.json();
+    for (const seg of d.transcript || []) {
+      if (seg.chunk_index > lastSeenIndex) lastSeenIndex = seg.chunk_index;
+      const text = (seg.text || "").trim();
+      if (!text) continue;
+      const li = el("li", "transcript-item");
+      li.appendChild(el("span", "transcript-time", new Date(seg.timestamp).toLocaleTimeString()));
+      li.appendChild(el("span", "transcript-text", text));
+      meetingTranscript.appendChild(li);
+    }
+    meetingTranscriptWrap.hidden = meetingTranscript.children.length === 0;
+  } catch (e) {}
+}
+
+async function startRecording() {
+  if (!sessionId) {
+    setMeetingStatus("idle", MEET.noSession);
+    return;
+  }
+  recordingMode = document.querySelector('input[name="meeting-mode"]:checked').value;
+  if (recordingMode === "full" && !(await checkConsent())) {
+    setMeetingStatus("idle", MEET.errConsent);
+    return;
+  }
+  try {
+    mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  } catch (e) {
+    setMeetingStatus("idle", MEET.micDenied);
+    return;
+  }
+  const mime = pickMimeType();
+  mediaRecorder = mime
+    ? new MediaRecorder(mediaStream, { mimeType: mime })
+    : new MediaRecorder(mediaStream);
+  mediaRecorder.ondataavailable = (ev) => {
+    if (ev.data && ev.data.size > 0) uploadChunk(ev.data, chunkIndex++);
+  };
+  mediaRecorder.start(15000);
+  isRecording = true;
+  meetingStart.hidden = true;
+  meetingStop.hidden = false;
+  meetingDelay.hidden = false;
+  meetingTranscriptWrap.hidden = meetingTranscript.children.length === 0;
+  setMeetingStatus("recording");
+  pollTimer = setInterval(pollTranscript, 3000);
+}
+
+async function stopRecording() {
+  if (mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
+  if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+  isRecording = false;
+  meetingStart.hidden = false;
+  meetingStop.hidden = true;
+  meetingDelay.hidden = true;
+  if (mediaStream) {
+    mediaStream.getTracks().forEach((t) => t.stop());
+    mediaStream = null;
+  }
+  setMeetingStatus("processing");
+  try {
+    if (sessionId) await fetch(`${API}/api/live/session/${sessionId}/stop`, { method: "POST" });
+  } catch (e) {}
+  mediaRecorder = null;
+  await pollTranscript();
+  setMeetingStatus("idle");
+}
+
+meetingStart.addEventListener("click", startRecording);
+meetingStop.addEventListener("click", stopRecording);

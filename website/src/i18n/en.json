@@ -132,6 +132,27 @@
       "errConsent": "Audio capture refused: no recorded consent for this session. Record consent above.",
       "errTranscribe": "Transcription failed.",
       "errTranscript": "Could not load the transcript."
+    },
+    "meeting": {
+      "title": "Live Meeting",
+      "modeLabel": "Recording mode",
+      "mode": {
+        "full": "Full meeting (all voices — consent required)",
+        "fullHint": "Captures all speakers. Requires recorded consent for this session.",
+        "dictation": "Dictation only (my voice — always available)",
+        "dictationHint": "Captures only your voice. Always available, no consent required."
+      },
+      "start": "Start recording",
+      "stop": "Stop recording",
+      "recording": "Recording",
+      "processing": "Processing backlog",
+      "idle": "Idle",
+      "transcriptTitle": "Live transcript",
+      "delayNote": "Transcription appears with a 30-90 second delay — this is normal.",
+      "micPermissionDenied": "Microphone permission denied. Please allow microphone access.",
+      "errConsent": "Audio capture refused: no recorded consent for this session.",
+      "errorChunk": "Failed to send an audio chunk.",
+      "noSession": "Upload a document first to create a session."
     }
   },
   "footer": {

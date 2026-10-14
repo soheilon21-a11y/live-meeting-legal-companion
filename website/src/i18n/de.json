@@ -132,6 +132,27 @@
       "errConsent": "Audioaufnahme verweigert: Keine aufgezeichnete Einwilligung für diese Sitzung. Zeichnen Sie oben die Einwilligung auf.",
       "errTranscribe": "Transkription fehlgeschlagen.",
       "errTranscript": "Das Transkript konnte nicht geladen werden."
+    },
+    "meeting": {
+      "title": "Live-Besprechung",
+      "modeLabel": "Aufnahmemodus",
+      "mode": {
+        "full": "Gesamte Besprechung (alle Stimmen — Einwilligung erforderlich)",
+        "fullHint": "Nimmt alle Sprechenden auf. Erfordert eine aufgezeichnete Einwilligung für diese Sitzung.",
+        "dictation": "Nur Diktat (meine Stimme — immer verfügbar)",
+        "dictationHint": "Nimmt nur Ihre Stimme auf. Immer verfügbar, keine Einwilligung erforderlich."
+      },
+      "start": "Aufnahme starten",
+      "stop": "Aufnahme stoppen",
+      "recording": "Aufnahme",
+      "processing": "Verarbeitungsrückstand",
+      "idle": "Bereit",
+      "transcriptTitle": "Live-Transkript",
+      "delayNote": "Die Transkription erscheint mit 30-90 Sekunden Verzögerung — das ist normal.",
+      "micPermissionDenied": "Mikrofonzugriff verweigert. Bitte erlauben Sie den Mikrofonzugriff.",
+      "errConsent": "Audioaufnahme verweigert: Keine aufgezeichnete Einwilligung für diese Sitzung.",
+      "errorChunk": "Ein Audioabschnitt konnte nicht gesendet werden.",
+      "noSession": "Laden Sie zuerst ein Dokument hoch, um eine Sitzung zu erstellen."
     }
   },
   "footer": {

@@ -688,3 +688,66 @@ section h2 {
   gap: 0.75rem;
   margin-top: 1rem;
 }
+
+/* Live Meeting (Phase 4a) */
+.live-meeting {
+  margin: 1.5rem 0;
+  padding: 1.25rem;
+  border: 1px solid var(--accent);
+  background: #fff;
+}
+
+.meeting-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.75rem 0;
+  flex-wrap: wrap;
+}
+
+.meeting-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.status-dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background: #9a958c;
+}
+
+.status-recording .status-dot {
+  background: #c62828;
+  animation: status-pulse 1.2s ease-in-out infinite;
+}
+
+.status-recording .status-text {
+  color: #c62828;
+}
+
+.status-processing .status-dot {
+  background: #e0a800;
+}
+
+.status-processing .status-text {
+  color: #a07a00;
+}
+
+.status-idle .status-text {
+  color: var(--muted);
+}
+
+@keyframes status-pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.3; }
+  100% { opacity: 1; }
+}
+
+.delay-note {
+  color: var(--accent);
+  margin: 0.5rem 0;
+}

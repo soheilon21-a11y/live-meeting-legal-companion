@@ -5,6 +5,7 @@ import httpx
 
 from app.core.config import settings
 from app.services import retrieval
+from app.services.live_worker import model_lock
 
 VALID_STATUSES = {"supported", "conflicting", "insufficient"}
 
@@ -76,7 +77,8 @@ def analyze(
         }, "retrieval_only"
 
     try:
-        raw = _call_llm(_build_prompt(discussion_point, passages))
+        with model_lock:
+            raw = _call_llm(_build_prompt(discussion_point, passages))
         data = _parse_response(raw)
         status = data.get("evidence_status", "insufficient")
         if status not in VALID_STATUSES:
