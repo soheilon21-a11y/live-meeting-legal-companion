@@ -10,7 +10,7 @@ client = TestClient(app)
 
 
 class FakeVoice:
-    def synthesize(self, text, wav_file):
+    def synthesize_wav(self, text, wav_file):
         wav_file.setframerate(22050)
         wav_file.setsampwidth(2)
         wav_file.setnchannels(1)
@@ -52,7 +52,7 @@ def test_speak_long_text_truncates(monkeypatch):
     seen = {}
 
     class RecVoice:
-        def synthesize(self, text, wav_file):
+        def synthesize_wav(self, text, wav_file):
             seen["text"] = text
             wav_file.setframerate(22050)
             wav_file.setsampwidth(2)

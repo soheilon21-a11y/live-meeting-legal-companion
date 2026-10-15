@@ -48,5 +48,5 @@ def speak(text: str, lang: str = "en") -> bytes:
     voice = _load_voice(lang)
     buf = BytesIO()
     with wave.open(buf, "wb") as wav_file:
-        voice.synthesize(text, wav_file)
+        voice.synthesize_wav(text, wav_file)
     return buf.getvalue()
