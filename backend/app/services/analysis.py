@@ -1,4 +1,5 @@
 import json
+import logging
 import re
 
 import httpx
@@ -8,6 +9,8 @@ from app.services import retrieval
 from app.services.live_worker import model_lock
 
 VALID_STATUSES = {"supported", "conflicting", "insufficient"}
+
+logger = logging.getLogger(__name__)
 
 
 def _build_prompt(discussion_point: str, passages: list[dict]) -> str:
@@ -58,6 +61,18 @@ def _parse_response(raw: str) -> dict:
     return {}
 
 
+def _retrieval_only_finding(passages: list[dict]) -> dict:
+    top = passages[0]
+    return {
+        "verbatim_passage": top["text"],
+        "passage_position": top["position"],
+        "issue_question": "",
+        "evidence_status": "insufficient",
+        "suggested_question": None,
+        "source": "retrieval_only",
+    }
+
+
 def analyze(
     document_id: str,
     discussion_point: str,
@@ -74,28 +89,31 @@ def analyze(
             "issue_question": "",
             "evidence_status": "insufficient",
             "suggested_question": None,
+            "source": "retrieval_only",
         }, "retrieval_only"
 
     try:
         with model_lock:
             raw = _call_llm(_build_prompt(discussion_point, passages))
         data = _parse_response(raw)
+        issue_question = data.get("issue_question")
+        verbatim_passage = data.get("verbatim_passage")
+        if not (issue_question or "").strip() and not (verbatim_passage or "").strip():
+            logger.warning(
+                "LLM output was empty or degenerate; falling back to retrieval-only. raw=%r",
+                raw[:200],
+            )
+            return _retrieval_only_finding(passages), "retrieval_only"
         status = data.get("evidence_status", "insufficient")
         if status not in VALID_STATUSES:
             status = "insufficient"
         return {
-            "verbatim_passage": data.get("verbatim_passage", ""),
+            "verbatim_passage": verbatim_passage or "",
             "passage_position": data.get("passage_position") or None,
-            "issue_question": data.get("issue_question", ""),
+            "issue_question": issue_question or "",
             "evidence_status": status,
             "suggested_question": data.get("suggested_question") or None,
+            "source": "llm_grounded",
         }, "llm_grounded"
     except Exception:
-        top = passages[0]
-        return {
-            "verbatim_passage": top["text"],
-            "passage_position": top["position"],
-            "issue_question": "",
-            "evidence_status": "insufficient",
-            "suggested_question": None,
-        }, "retrieval_only"
+        return _retrieval_only_finding(passages), "retrieval_only"

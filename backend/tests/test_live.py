@@ -91,6 +91,47 @@ def test_retrieval_only_fallback(monkeypatch):
     assert finding["verbatim_passage"] in FIXTURE
 
 
+def test_empty_parse_falls_back_to_retrieval(monkeypatch):
+    def fake_llm(prompt):
+        return '{"verbatim_passage": "", "issue_question": "", "evidence_status": "insufficient"}'
+
+    monkeypatch.setattr(analysis, "_call_llm", fake_llm)
+
+    doc_id = _upload().json()["document_id"]
+    resp = client.post(
+        "/api/live/analyze",
+        json={"document_id": doc_id, "discussion_point": "When does the agreement commence?"},
+    )
+    finding = resp.json()
+    assert finding["mode"] == "retrieval_only"
+    assert finding["evidence_status"] == "insufficient"
+    assert finding["verbatim_passage"]
+    assert finding["verbatim_passage"] in FIXTURE
+
+
+def test_short_valid_finding_not_downgraded(monkeypatch):
+    def fake_llm(prompt):
+        return (
+            '{"verbatim_passage": "",'
+            ' "passage_position": "",'
+            ' "issue_question": "Does the contract address termination?",'
+            ' "evidence_status": "insufficient",'
+            ' "suggested_question": ""}'
+        )
+
+    monkeypatch.setattr(analysis, "_call_llm", fake_llm)
+
+    doc_id = _upload().json()["document_id"]
+    resp = client.post(
+        "/api/live/analyze",
+        json={"document_id": doc_id, "discussion_point": "How is the agreement terminated?"},
+    )
+    finding = resp.json()
+    assert finding["mode"] == "llm_grounded"
+    assert finding["issue_question"] == "Does the contract address termination?"
+    assert finding["verbatim_passage"] == ""
+
+
 def test_export_returns_pdf(monkeypatch):
     def fake_llm(prompt):
         return (
@@ -108,9 +149,10 @@ def test_export_returns_pdf(monkeypatch):
         "/api/live/analyze",
         json={"document_id": doc_id, "discussion_point": "When does the agreement commence?"},
     )
-    resp = client.post(f"/api/live/session/{doc_id}/export")
+    resp = client.get(f"/api/live/session/{doc_id}/export")
     assert resp.status_code == 200
     assert resp.headers["content-type"] == "application/pdf"
+    assert resp.headers["cache-control"] == "no-store"
     assert resp.content.startswith(b"%PDF")
 
 

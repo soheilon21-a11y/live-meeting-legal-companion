@@ -81,6 +81,13 @@ def _build_pdf(session_id: str, filename: str, findings: list[dict]) -> bytes:
         story.append(Paragraph(f"Finding {i}", styles["Heading2"]))
         story.append(Paragraph(f"Issue: {_esc(finding.get('issue_question') or '—')}", styles["Normal"]))
         story.append(Paragraph(f"Evidence: {_esc(finding.get('evidence_status') or '')}", styles["Normal"]))
+        if finding.get("source") == "retrieval_only":
+            story.append(
+                Paragraph(
+                    "retrieval-based finding — LLM output unavailable this run",
+                    styles["Italic"],
+                )
+            )
         passage = finding.get("verbatim_passage") or ""
         if passage:
             story.append(Paragraph(f"Passage ({_esc(finding.get('passage_position') or '')}):", styles["Normal"]))
@@ -115,7 +122,8 @@ def analyze(req: AnalyzeRequest) -> AnalyzeResponse:
         req.document_id, req.discussion_point, req.transcript_excerpt
     )
     finding = Finding(**finding_data)
-    session_store.add_finding(session["session_id"], finding.model_dump())
+    stored = {**finding.model_dump(), "source": finding_data.get("source", mode)}
+    session_store.add_finding(session["session_id"], stored)
     return AnalyzeResponse(**finding.model_dump(), mode=mode)
 
 
@@ -366,13 +374,16 @@ def all_observations(session_id: str) -> dict:
     return {"session_id": session_id, "observations": observation_store.get_observations(session_id)}
 
 
-@router.post("/session/{session_id}/export")
+@router.get("/session/{session_id}/export")
 def export(session_id: str) -> Response:
     session = session_store.load_session(session_id)
     if session is None:
         raise HTTPException(status_code=404, detail="Unknown session")
     pdf_bytes = _build_pdf(session_id, session.get("filename", ""), session["findings"])
-    headers = {"Content-Disposition": f'attachment; filename="niyosh-findings-{session_id[:8]}.pdf"'}
+    headers = {
+        "Content-Disposition": f'attachment; filename="niyosh-findings-{session_id[:8]}.pdf"',
+        "Cache-Control": "no-store",
+    }
     return Response(content=pdf_bytes, media_type="application/pdf", headers=headers)
 
 
