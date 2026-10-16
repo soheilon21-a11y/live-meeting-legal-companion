@@ -54,7 +54,7 @@ The country check is **informational only — not legal advice.** The **user is 
 
 ## Text-to-speech (Phase 5a)
 
-TTS audio is generated locally using Piper. No audio data is sent to any external service. Voice models are stored locally (`models/piper/`). TTS output is streamed to the browser and not persisted.
+TTS audio is generated locally using Piper. No audio data is sent to any external service. Voice models are stored locally (`models/piper/`). TTS output is streamed to the browser and not persisted. The Live page's CSP adds `media-src 'self' blob:` solely to play locally-generated TTS audio; it permits no new network origins.
 
 ## No certification claims
 

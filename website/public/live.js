@@ -133,6 +133,7 @@ async function speakAloud(text) {
     currentAudio = new Audio(url);
     await currentAudio.play();
   } catch (e) {
+    console.error("speakAloud failed:", e && e.name, "-", e && e.message, e);
     ttsStatus.textContent = I18N.ttsError;
   }
 }
