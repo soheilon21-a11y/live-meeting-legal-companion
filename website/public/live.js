@@ -36,6 +36,20 @@ async function ensureSession() {
   }
 }
 
+async function withDeadSessionRecovery(perform) {
+  const first = await perform();
+  if (first.status !== 404) return first;
+  try {
+    const d = await first.clone().json();
+    if (d.detail !== "Unknown session") return first;
+  } catch (e) {
+    return first;
+  }
+  sessionId = null;
+  if (!(await ensureSession())) return first;
+  return perform();
+}
+
 function el(tag, cls, text) {
   const n = document.createElement(tag);
   if (cls) n.className = cls;
@@ -197,7 +211,9 @@ function renderTranscript() {
 async function loadTranscript() {
   if (!sessionId) return;
   try {
-    const r = await fetch(`${API}/api/live/session/${sessionId}/transcript`);
+    const r = await withDeadSessionRecovery(() =>
+      fetch(`${API}/api/live/session/${sessionId}/transcript`)
+    );
     if (!r.ok) throw new Error();
     const d = await r.json();
     transcript = d.transcript || [];
@@ -471,7 +487,9 @@ function pickMimeType() {
 
 async function checkConsent() {
   try {
-    const r = await fetch(`${API}/api/live/consent/${sessionId}`);
+    const r = await withDeadSessionRecovery(() =>
+      fetch(`${API}/api/live/consent/${sessionId}`)
+    );
     if (!r.ok) return false;
     const d = await r.json();
     return (d.consents || []).some((c) => c.consent_given);
@@ -486,7 +504,9 @@ async function uploadChunk(blob, index) {
   form.append("chunk_index", index);
   form.append("mode", recordingMode);
   try {
-    const r = await fetch(`${API}/api/live/session/${sessionId}/chunk`, { method: "POST", body: form });
+    const r = await withDeadSessionRecovery(() =>
+      fetch(`${API}/api/live/session/${sessionId}/chunk`, { method: "POST", body: form })
+    );
     if (r.status === 403) {
       setMeetingStatus("idle", MEET.errConsent);
       await stopRecording();
