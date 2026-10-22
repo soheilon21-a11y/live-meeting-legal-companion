@@ -4,10 +4,11 @@ import '../styles/global.css';
 const { t, lang } = Astro.props;
 const csp_extra = Astro.props.csp_extra ?? '';
 const hasScriptSrc = csp_extra.includes('script-src');
+const styleSrc = import.meta.env.DEV ? "style-src 'self' 'unsafe-inline'" : "style-src 'self'";
 const csp = [
   "default-src 'none'",
   hasScriptSrc ? '' : "script-src 'none'",
-  "style-src 'self'",
+  styleSrc,
   "img-src 'self'",
   "font-src 'self'",
   "base-uri 'none'",
