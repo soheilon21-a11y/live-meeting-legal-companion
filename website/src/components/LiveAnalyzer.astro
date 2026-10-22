@@ -1,8 +1,13 @@
 ---
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import LiveMeeting from './LiveMeeting.astro';
 
 const { t } = Astro.props;
-const scriptSrc = `${import.meta.env.BASE_URL}/live.js`;
+const liveJsPath = fileURLToPath(new URL('../../public/live.js', import.meta.url));
+const liveJsVersion = createHash('sha256').update(readFileSync(liveJsPath)).digest('hex').slice(0, 8);
+const scriptSrc = `${import.meta.env.BASE_URL}/live.js?v=${liveJsVersion}`;
 ---
 
 <section
