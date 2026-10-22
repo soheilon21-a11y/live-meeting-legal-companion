@@ -28,6 +28,7 @@ async function ensureSession() {
     const r = await fetch(`${API}/api/live/session`, { method: "POST" });
     if (!r.ok) throw new Error();
     const d = await r.json();
+    if (typeof d.session_id !== "string" || !d.session_id.trim()) return false;
     sessionId = d.session_id;
     return true;
   } catch (e) {
