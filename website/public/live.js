@@ -22,6 +22,19 @@ const ttsReadAll = $("live-tts-read-all");
 let lastFindings = [];
 let currentAudio = null;
 
+async function ensureSession() {
+  if (sessionId) return true;
+  try {
+    const r = await fetch(`${API}/api/live/session`, { method: "POST" });
+    if (!r.ok) throw new Error();
+    const d = await r.json();
+    sessionId = d.session_id;
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
 function el(tag, cls, text) {
   const n = document.createElement(tag);
   if (cls) n.className = cls;
@@ -312,8 +325,8 @@ countrySelect.addEventListener("change", async () => {
 });
 
 recordConsentBtn.addEventListener("click", async () => {
-  if (!sessionId) {
-    consentStatus.textContent = I18N.consentNoSession;
+  if (!sessionId && !(await ensureSession())) {
+    consentStatus.textContent = I18N.errGeneric;
     return;
   }
   const country = countrySelect.value || "unknown";
@@ -342,11 +355,15 @@ transcribeBtn.addEventListener("click", async () => {
     audioStatus.textContent = I18N.errTranscribe;
     return;
   }
+  const mode = document.querySelector('input[name="live-mode"]:checked').value;
+  if (mode === "dictation" && !sessionId && !(await ensureSession())) {
+    audioStatus.textContent = I18N.errGeneric;
+    return;
+  }
   if (!sessionId) {
     audioStatus.textContent = I18N.consentNoSession;
     return;
   }
-  const mode = document.querySelector('input[name="live-mode"]:checked').value;
   const form = new FormData();
   form.append("file", file);
   const url = mode === "full"
@@ -506,8 +523,8 @@ async function pollTranscript() {
 }
 
 async function startRecording() {
-  if (!sessionId) {
-    setMeetingStatus("idle", MEET.noSession);
+  if (!sessionId && !(await ensureSession())) {
+    setMeetingStatus("idle", I18N.errGeneric);
     return;
   }
   recordingMode = document.querySelector('input[name="meeting-mode"]:checked').value;

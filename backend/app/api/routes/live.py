@@ -113,6 +113,13 @@ def upload(file: UploadFile = File(...)) -> UploadResponse:
     return UploadResponse(document_id=doc_id, session_id=doc_id)
 
 
+@router.post("/session", response_model=UploadResponse)
+def create_session() -> UploadResponse:
+    session_id = uuid.uuid4().hex
+    session_store.create_session(session_id, "")
+    return UploadResponse(document_id=session_id, session_id=session_id)
+
+
 @router.post("/analyze", response_model=AnalyzeResponse)
 def analyze(req: AnalyzeRequest) -> AnalyzeResponse:
     session = session_store.load_session(req.document_id)
