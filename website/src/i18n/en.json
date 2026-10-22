@@ -89,7 +89,8 @@
     "error": {
       "upload": "Upload failed.",
       "analyze": "Analysis failed.",
-      "generic": "Something went wrong."
+      "generic": "Something went wrong.",
+      "sessionCreate": "Couldn't create a recording session — make sure the app is running, then try again."
     },
     "consent": {
       "sectionTitle": "Session setup",

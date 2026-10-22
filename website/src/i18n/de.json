@@ -89,7 +89,8 @@
     "error": {
       "upload": "Upload fehlgeschlagen.",
       "analyze": "Analyse fehlgeschlagen.",
-      "generic": "Etwas ist schiefgelaufen."
+      "generic": "Etwas ist schiefgelaufen.",
+      "sessionCreate": "Aufnahmesitzung konnte nicht erstellt werden — stellen Sie sicher, dass die App läuft, und versuchen Sie es erneut."
     },
     "consent": {
       "sectionTitle": "Sitzung einrichten",

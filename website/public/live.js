@@ -326,7 +326,7 @@ countrySelect.addEventListener("change", async () => {
 
 recordConsentBtn.addEventListener("click", async () => {
   if (!sessionId && !(await ensureSession())) {
-    consentStatus.textContent = I18N.errGeneric;
+    consentStatus.textContent = I18N.errSessionCreate;
     return;
   }
   const country = countrySelect.value || "unknown";
@@ -357,7 +357,7 @@ transcribeBtn.addEventListener("click", async () => {
   }
   const mode = document.querySelector('input[name="live-mode"]:checked').value;
   if (mode === "dictation" && !sessionId && !(await ensureSession())) {
-    audioStatus.textContent = I18N.errGeneric;
+    audioStatus.textContent = I18N.errSessionCreate;
     return;
   }
   if (!sessionId) {
@@ -524,7 +524,7 @@ async function pollTranscript() {
 
 async function startRecording() {
   if (!sessionId && !(await ensureSession())) {
-    setMeetingStatus("idle", I18N.errGeneric);
+    setMeetingStatus("idle", I18N.errSessionCreate);
     return;
   }
   recordingMode = document.querySelector('input[name="meeting-mode"]:checked').value;
