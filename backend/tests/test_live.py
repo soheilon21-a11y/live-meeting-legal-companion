@@ -1,3 +1,5 @@
+import logging
+
 from fastapi.testclient import TestClient
 
 from app.core.config import settings
@@ -107,6 +109,23 @@ def test_empty_parse_falls_back_to_retrieval(monkeypatch):
     assert finding["evidence_status"] == "insufficient"
     assert finding["verbatim_passage"]
     assert finding["verbatim_passage"] in FIXTURE
+
+
+def test_degenerate_output_does_not_log_content(monkeypatch, caplog):
+    def fake_llm(prompt):
+        return "unparsable: The agreement shall commence on 1 January 2026"
+
+    monkeypatch.setattr(analysis, "_call_llm", fake_llm)
+
+    doc_id = _upload().json()["document_id"]
+    with caplog.at_level(logging.WARNING, logger="app.services.analysis"):
+        client.post(
+            "/api/live/analyze",
+            json={"document_id": doc_id, "discussion_point": "When does the agreement commence?"},
+        )
+
+    assert "degenerate" in caplog.text
+    assert "commence on 1 January 2026" not in caplog.text
 
 
 def test_short_valid_finding_not_downgraded(monkeypatch):

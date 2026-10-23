@@ -100,8 +100,8 @@ def analyze(
         verbatim_passage = data.get("verbatim_passage")
         if not (issue_question or "").strip() and not (verbatim_passage or "").strip():
             logger.warning(
-                "LLM output was empty or degenerate; falling back to retrieval-only. raw=%r",
-                raw[:200],
+                "LLM output was empty or degenerate; falling back to retrieval-only. len=%d",
+                len(raw),
             )
             return _retrieval_only_finding(passages), "retrieval_only"
         status = data.get("evidence_status", "insufficient")
