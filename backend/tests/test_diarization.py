@@ -4,7 +4,7 @@ import numpy as np
 from fastapi.testclient import TestClient
 
 from app.core.config import settings
-from app.services import diarization, session_store
+from app.services import diarization, live_worker, session_store
 from main import app
 
 client = TestClient(app)
@@ -98,6 +98,21 @@ def test_correct_speaker(monkeypatch):
     assert body["updated"] is True
     speakers = {e["chunk_index"]: e["speaker"] for e in body["transcript"]}
     assert speakers[0] == "Speaker 2"
+
+
+def test_diarize_holds_model_lock(monkeypatch):
+    def fake_diarize(session_id, expected=None):
+        assert live_worker.model_lock.locked()
+        return {0: "Speaker 1", 1: "Speaker 2"}
+
+    monkeypatch.setattr(diarization, "diarize", fake_diarize)
+    _make_session("lock-d")
+    _write_chunk("lock-d", 0)
+    _write_chunk("lock-d", 1)
+    _append_live("lock-d", 0, "a")
+    _append_live("lock-d", 1, "b")
+    resp = client.post("/api/live/session/lock-d/diarize")
+    assert resp.status_code == 200
 
 
 def test_cluster_and_label_speakers():

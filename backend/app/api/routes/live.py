@@ -226,7 +226,8 @@ def diarize(session_id: str, body: DiarizeRequest | None = None) -> dict:
                 status_code=400, detail="expected_speakers must be between 2 and 6"
             )
     try:
-        chunk_speakers = diarization.diarize(session_id, expected)
+        with live_worker.model_lock:
+            chunk_speakers = diarization.diarize(session_id, expected)
     except diarization.DiarizationError as exc:
         raise HTTPException(status_code=503, detail=str(exc))
     session_store.apply_speakers(session_id, chunk_speakers)
