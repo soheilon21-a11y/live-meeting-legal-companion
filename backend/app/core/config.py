@@ -22,6 +22,13 @@ class Settings:
     LIVE_WHISPER_BEAM_SIZE = int(os.getenv("LIVE_WHISPER_BEAM_SIZE", "1"))
     LIVE_CHUNK_SECONDS = int(os.getenv("LIVE_CHUNK_SECONDS", "15"))
     LIVE_MAX_QUEUE = int(os.getenv("LIVE_MAX_QUEUE", "3"))
+    LIVE_WHISPER_LANGUAGE = os.getenv("LIVE_WHISPER_LANGUAGE", "en")
+    LIVE_WHISPER_INITIAL_PROMPT = os.getenv(
+        "LIVE_WHISPER_INITIAL_PROMPT",
+        "contract, clause, termination, liability, indemnity, warranty, jurisdiction, "
+        "plaintiff, defendant, hearing, deposition, arbitration, breach, damages, "
+        "notice, dispute, evidence, testimony, appeal, statute, compliance",
+    )
 
 
 settings = Settings()

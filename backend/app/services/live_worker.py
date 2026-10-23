@@ -65,7 +65,13 @@ def process_chunk(session_id: str, chunk_index: int, audio_bytes: bytes) -> None
     try:
         try:
             with model_lock:
-                result = transcription.transcribe_audio(audio_bytes)
+                result = transcription.transcribe_audio(
+                    audio_bytes,
+                    language=settings.LIVE_WHISPER_LANGUAGE,
+                    initial_prompt=settings.LIVE_WHISPER_INITIAL_PROMPT,
+                    condition_on_previous_text=False,
+                    no_speech_threshold=0.6,
+                )
             text = result.get("text", "")
             language = result.get("language")
         except Exception:

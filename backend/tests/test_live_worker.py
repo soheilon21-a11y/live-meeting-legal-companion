@@ -15,7 +15,7 @@ def _make_session(session_id: str) -> None:
     session_store.create_session(session_id, "contract.txt")
 
 
-def _fake_transcribe(file_bytes):
+def _fake_transcribe(file_bytes, **kwargs):
     return {"text": "hello world", "language": "en"}
 
 
@@ -94,7 +94,7 @@ def test_status_reports_queue_depth(monkeypatch):
     started = threading.Event()
     release = threading.Event()
 
-    def slow_transcribe(b):
+    def slow_transcribe(b, **kwargs):
         started.set()
         release.wait(timeout=5)
         return {"text": "x", "language": "en"}
@@ -160,7 +160,7 @@ def test_flush_waits_for_inflight(monkeypatch):
     started = threading.Event()
     release = threading.Event()
 
-    def slow_transcribe(b):
+    def slow_transcribe(b, **kwargs):
         started.set()
         release.wait(timeout=5)
         return {"text": "x", "language": "en"}
