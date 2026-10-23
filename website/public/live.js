@@ -1,6 +1,8 @@
 const root = document.querySelector(".live");
 const I18N = root.dataset;
 const API = "http://localhost:8002";
+const HEALTH_URL = "http://127.0.0.1:8002/health";
+let backendUp = null;
 let sessionId = null;
 let transcript = [];
 const $ = (id) => document.getElementById(id);
@@ -21,6 +23,30 @@ const ttsVoice = $("live-tts-voice"), ttsStatus = $("live-tts-status");
 const ttsReadAll = $("live-tts-read-all");
 let lastFindings = [];
 let currentAudio = null;
+
+async function checkHealth() {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 2500);
+  let up = false;
+  try {
+    const r = await fetch(HEALTH_URL, { signal: controller.signal });
+    up = r.ok;
+  } catch (e) {
+    up = false;
+  } finally {
+    clearTimeout(timer);
+  }
+  backendUp = up;
+  return up;
+}
+
+function recheck() {
+  return checkHealth();
+}
+
+window.recheck = recheck;
+
+checkHealth();
 
 async function ensureSession() {
   if (sessionId) return true;
