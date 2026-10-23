@@ -86,6 +86,14 @@
     "delete": "Delete session",
     "deleteConfirm": "Delete this session and all its data?",
     "localNote": "Live Analysis talks to your locally running Niyosh app at localhost:8002.",
+    "backend": {
+      "title": "Local app required",
+      "text": "This is the control panel of the Niyosh local app. Audio, documents, and transcripts never leave this machine — that is why the local app is required.",
+      "docsLink": "Run the local app",
+      "lastChecked": "Last checked:",
+      "recheck": "Re-check connection",
+      "disabledHint": "Local app not running"
+    },
     "error": {
       "upload": "Upload failed.",
       "analyze": "Analysis failed.",

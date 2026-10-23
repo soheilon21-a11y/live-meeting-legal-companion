@@ -36,7 +36,7 @@ async function checkHealth() {
   } finally {
     clearTimeout(timer);
   }
-  backendUp = up;
+  applyHealth(up);
   return up;
 }
 
@@ -45,8 +45,6 @@ function recheck() {
 }
 
 window.recheck = recheck;
-
-checkHealth();
 
 async function ensureSession() {
   if (sessionId) return true;
@@ -58,6 +56,7 @@ async function ensureSession() {
     sessionId = d.session_id;
     return true;
   } catch (e) {
+    if (e instanceof TypeError) markBackendDown();
     return false;
   }
 }
@@ -188,6 +187,7 @@ async function speakAloud(text) {
     await currentAudio.play();
   } catch (e) {
     console.error("speakAloud failed:", e && e.name, "-", e && e.message, e);
+    if (e instanceof TypeError) markBackendDown();
     ttsStatus.textContent = I18N.ttsError;
   }
 }
@@ -245,6 +245,7 @@ async function loadTranscript() {
     transcript = d.transcript || [];
     renderTranscript();
   } catch (e) {
+    if (e instanceof TypeError) markBackendDown();
     audioStatus.textContent = I18N.errTranscript;
   }
 }
@@ -316,6 +317,7 @@ fileInput.addEventListener("change", async () => {
     observationsList.replaceChildren();
     pollObservations();
   } catch (e) {
+    if (e instanceof TypeError) markBackendDown();
     statusEl.textContent = I18N.errUpload;
   }
 });
@@ -340,6 +342,7 @@ analyzeBtn.addEventListener("click", async () => {
     loadFindings();
     statusEl.textContent = "";
   } catch (e) {
+    if (e instanceof TypeError) markBackendDown();
     statusEl.textContent = I18N.errAnalyze;
   } finally {
     analyzeBtn.disabled = false;
@@ -384,6 +387,7 @@ recordConsentBtn.addEventListener("click", async () => {
     if (!r.ok) throw new Error();
     consentStatus.textContent = I18N.consentRecorded;
   } catch (e) {
+    if (e instanceof TypeError) markBackendDown();
     consentStatus.textContent = I18N.errGeneric;
   }
 });
@@ -425,6 +429,7 @@ transcribeBtn.addEventListener("click", async () => {
     audioStatus.textContent = "";
     await loadTranscript();
   } catch (e) {
+    if (e instanceof TypeError) markBackendDown();
     audioStatus.textContent = I18N.errTranscribe;
   } finally {
     transcribeBtn.disabled = false;
@@ -520,6 +525,7 @@ async function checkConsent() {
     const d = await r.json();
     return (d.consents || []).some((c) => c.consent_given);
   } catch (e) {
+    if (e instanceof TypeError) markBackendDown();
     return false;
   }
 }
@@ -546,6 +552,7 @@ async function uploadChunk(blob, index) {
     if (d.status === "backlogged") setMeetingStatus("processing");
     else if (isRecording) setMeetingStatus("recording");
   } catch (e) {
+    if (e instanceof TypeError) markBackendDown();
     setMeetingStatus("idle", MEET.errorChunk);
   }
 }
@@ -566,7 +573,9 @@ async function pollTranscript() {
       meetingTranscript.appendChild(li);
     }
     meetingTranscriptWrap.hidden = meetingTranscript.children.length === 0;
-  } catch (e) {}
+  } catch (e) {
+    if (e instanceof TypeError) markBackendDown();
+  }
 }
 
 async function startRecording() {
@@ -672,7 +681,9 @@ async function pollObservations() {
     if (typeof d.last_index === "number") obsLastIndex = d.last_index;
     lastObservations = d.all || [];
     renderObservations(lastObservations);
-  } catch (e) {}
+  } catch (e) {
+    if (e instanceof TypeError) markBackendDown();
+  }
 }
 
 async function dismissObservation(obsId) {
@@ -683,3 +694,47 @@ async function dismissObservation(obsId) {
     await fetch(`${API}/api/live/session/${sessionId}/observations/${obsId}/dismiss`, { method: "POST" });
   } catch (e) {}
 }
+
+// --- Local app down-state (banner + disabled controls) ---
+const backendBanner = $("backend-banner");
+const backendRecheck = $("backend-recheck");
+const backendLastCheckedTime = $("backend-last-checked-time");
+
+const sessionButtons = [
+  meetingStart,
+  recordConsentBtn,
+  transcribeBtn,
+  viewTranscriptBtn,
+  analyzeBtn,
+  ttsReadAll,
+  exportBtn,
+];
+
+function setBackendDown(down) {
+  backendUp = !down;
+  backendBanner.hidden = !down;
+  for (const b of sessionButtons) {
+    b.disabled = down;
+    if (down) {
+      b.setAttribute("aria-disabled", "true");
+      b.setAttribute("title", I18N.disabledHint);
+    } else {
+      b.removeAttribute("aria-disabled");
+      b.removeAttribute("title");
+    }
+  }
+}
+
+function markBackendDown() {
+  setBackendDown(true);
+}
+
+function applyHealth(up) {
+  backendUp = up;
+  backendLastCheckedTime.textContent = new Date().toLocaleTimeString();
+  setBackendDown(!up);
+}
+
+backendRecheck.addEventListener("click", recheck);
+
+checkHealth();

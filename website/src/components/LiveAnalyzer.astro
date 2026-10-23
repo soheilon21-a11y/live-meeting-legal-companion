@@ -4,10 +4,11 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import LiveMeeting from './LiveMeeting.astro';
 
-const { t } = Astro.props;
+const { t, lang } = Astro.props;
 const liveJsPath = fileURLToPath(new URL('../../public/live.js', import.meta.url));
 const liveJsVersion = createHash('sha256').update(readFileSync(liveJsPath)).digest('hex').slice(0, 8);
 const scriptSrc = `${import.meta.env.BASE_URL}/live.js?v=${liveJsVersion}`;
+const runLocalHref = lang === 'de' ? `${import.meta.env.BASE_URL}/de/#run-local` : `${import.meta.env.BASE_URL}/#run-local`;
 ---
 
 <section
@@ -59,11 +60,20 @@ const scriptSrc = `${import.meta.env.BASE_URL}/live.js?v=${liveJsVersion}`;
   data-tts-error={t.live.tts.error}
   data-tts-empty={t.live.tts.empty}
   data-disclaimer={t.live.disclaimer}
+  data-disabled-hint={t.live.backend.disabledHint}
 >
   <h1>{t.live.title}</h1>
   <p class="live-subtitle">{t.live.subtitle}</p>
 
   <p class="disclaimer">{t.live.disclaimer}</p>
+
+  <div class="backend-banner" id="backend-banner" role="status" hidden>
+    <h2>{t.live.backend.title}</h2>
+    <p>{t.live.backend.text}</p>
+    <p><a href={runLocalHref}>{t.live.backend.docsLink}</a></p>
+    <p class="backend-last-checked">{t.live.backend.lastChecked} <span id="backend-last-checked-time">—</span></p>
+    <button type="button" id="backend-recheck" class="live-analyze">{t.live.backend.recheck}</button>
+  </div>
 
   <LiveMeeting t={t} />
 

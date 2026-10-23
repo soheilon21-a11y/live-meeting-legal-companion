@@ -86,6 +86,14 @@
     "delete": "Sitzung löschen",
     "deleteConfirm": "Diese Sitzung und alle zugehörigen Daten löschen?",
     "localNote": "Die Live-Analyse kommuniziert mit Ihrer lokal laufenden Niyosh-Anwendung auf localhost:8002.",
+    "backend": {
+      "title": "Lokale Anwendung erforderlich",
+      "text": "Dies ist das Bedienfeld der lokalen Niyosh-Anwendung. Audio, Dokumente und Transkripte verlassen diesen Rechner nie — deshalb ist die lokale Anwendung erforderlich.",
+      "docsLink": "Lokale Anwendung ausführen",
+      "lastChecked": "Zuletzt geprüft:",
+      "recheck": "Verbindung erneut prüfen",
+      "disabledHint": "Lokale Anwendung läuft nicht"
+    },
     "error": {
       "upload": "Upload fehlgeschlagen.",
       "analyze": "Analyse fehlgeschlagen.",

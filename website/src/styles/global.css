@@ -428,6 +428,31 @@ section h2 {
   font-size: 0.9rem;
 }
 
+.backend-banner {
+  margin: 1.5rem 0;
+  padding: 1.25rem;
+  border: 1px solid var(--accent);
+  background: #fff;
+}
+
+.backend-banner h2 {
+  font-family: var(--serif);
+  color: var(--accent);
+  margin: 0 0 0.75rem;
+  font-size: 1.4rem;
+}
+
+.backend-banner a {
+  color: var(--accent);
+}
+
+.backend-last-checked {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin: 0.75rem 0 0.5rem;
+}
+
 .live-setup,
 .live-audio {
   margin: 1.5rem 0;
@@ -490,6 +515,11 @@ section h2 {
 }
 
 .live-analyze:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.live-export:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
