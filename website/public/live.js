@@ -606,16 +606,21 @@ function startRecorder() {
     const resolve = stopResolve;
     stopResolve = null;
     if (sessionActive && mediaStream) {
-      try {
-        startRecorder();
-      } catch (e) {
-        console.error("MediaRecorder recreation failed:", e && e.name, "-", e && e.message);
+      if (mediaStream.getTracks().some((t) => t.readyState === "live")) {
         try {
           startRecorder();
-        } catch (e2) {
-          console.error("MediaRecorder recreation retry failed:", e2 && e2.name, "-", e2 && e2.message);
-          setMeetingStatus("idle", MEET.errorChunk);
+        } catch (e) {
+          console.error("MediaRecorder recreation failed:", e && e.name, "-", e && e.message);
+          try {
+            startRecorder();
+          } catch (e2) {
+            console.error("MediaRecorder recreation retry failed:", e2 && e2.name, "-", e2 && e2.message);
+            setMeetingStatus("idle", MEET.errorChunk);
+          }
         }
+      } else {
+        setMeetingStatus("idle", MEET.micDenied);
+        stopRecording();
       }
     }
     if (resolve) resolve();
@@ -670,9 +675,11 @@ async function stopRecording() {
   if (obsPollTimer) { clearInterval(obsPollTimer); obsPollTimer = null; }
   isRecording = false;
   if (mediaRecorder) {
-    const stopped = new Promise((res) => { stopResolve = res; });
-    if (mediaRecorder.state !== "inactive") mediaRecorder.stop();
-    await stopped;
+    if (mediaRecorder.state !== "inactive") {
+      const stopped = new Promise((res) => { stopResolve = res; });
+      mediaRecorder.stop();
+      await stopped;
+    }
   }
   await Promise.allSettled([...inFlightUploads]);
   if (mediaStream) {
