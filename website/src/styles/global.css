@@ -276,6 +276,35 @@ section h2 {
   color: var(--muted);
 }
 
+/* Run local app */
+.run-local {
+  padding: 5rem 1rem;
+  border-top: 1px solid var(--muted);
+}
+
+.run-intro {
+  max-width: 72ch;
+}
+
+.run-requirements {
+  color: var(--muted);
+}
+
+.run-command code {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  background: #f3efe6;
+  padding: 0.1rem 0.4rem;
+  border-radius: 0.25rem;
+}
+
+.run-privacy {
+  margin-top: 1.5rem;
+  padding-left: 1rem;
+  border-left: 3px solid var(--accent);
+  color: var(--accent-dark);
+}
+
 /* Contact */
 .contact {
   padding: 5rem 1rem;

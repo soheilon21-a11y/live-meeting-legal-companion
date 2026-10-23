@@ -49,6 +49,17 @@
     "title": "User responsibility",
     "text": "The user is responsible for verifying local recording laws before using audio capture. If recording is restricted or prohibited in the meeting's jurisdiction, the user must disable audio capture before the meeting starts. This responsibility lies with the user, not the builder."
   },
+  "runLocal": {
+    "kicker": "LOCAL APP",
+    "title": "Run the local app",
+    "intro": "The Live Analysis page is the control panel of the Niyosh local app. Run it on your own machine so audio, documents, and transcripts never leave it.",
+    "requirements": "Requirements: Python 3.12 and a free port 8002.",
+    "launcherLabel": "Launcher (recommended):",
+    "launcher": "powershell -ExecutionPolicy Bypass -File .\\scripts\\start-windows.ps1",
+    "manualLabel": "Manual start:",
+    "manual": "python -m venv .venv; .venv\\Scripts\\activate; pip install -r backend/requirements.txt; uvicorn main:app --host 127.0.0.1 --port 8002 (from backend/)",
+    "privacy": "The page only ever contacts 127.0.0.1:8002 — your own machine."
+  },
   "live": {
     "title": "Live Analysis",
     "subtitle": "Analyze a reference contract against a discussion point raised in the meeting — locally, in private.",

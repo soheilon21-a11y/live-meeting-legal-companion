@@ -49,6 +49,17 @@
     "title": "Verantwortung des Nutzers",
     "text": "Sie sind dafür verantwortlich, die lokalen Aufnahmegesetze zu prüfen, bevor Sie Audioaufnahmen verwenden. Ist das Aufnehmen in der Rechtsordnung der Besprechung eingeschränkt oder verboten, müssen Sie die Audioaufnahme vor Beginn der Besprechung deaktivieren. Diese Verantwortung liegt bei Ihnen, nicht beim Entwickler."
   },
+  "runLocal": {
+    "kicker": "LOKALE ANWENDUNG",
+    "title": "Lokale Anwendung ausführen",
+    "intro": "Die Live-Analyse-Seite ist das Bedienfeld der lokalen Niyosh-Anwendung. Führen Sie sie auf Ihrem eigenen Rechner aus, damit Audio, Dokumente und Transkripte ihn nie verlassen.",
+    "requirements": "Voraussetzungen: Python 3.12 und ein freier Port 8002.",
+    "launcherLabel": "Starter (empfohlen):",
+    "launcher": "powershell -ExecutionPolicy Bypass -File .\\scripts\\start-windows.ps1",
+    "manualLabel": "Manueller Start:",
+    "manual": "python -m venv .venv; .venv\\Scripts\\activate; pip install -r backend/requirements.txt; uvicorn main:app --host 127.0.0.1 --port 8002 (aus backend/)",
+    "privacy": "Die Seite kontaktiert ausschließlich 127.0.0.1:8002 — Ihren eigenen Rechner."
+  },
   "live": {
     "title": "Live-Analyse",
     "subtitle": "Analysieren Sie einen Referenzvertrag im Abgleich mit einem Diskussionspunkt aus der Besprechung – lokal und privat.",

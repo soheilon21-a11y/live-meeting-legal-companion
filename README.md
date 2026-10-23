@@ -92,6 +92,37 @@ Then open the Live page:
 
 The API listens on http://localhost:8002. Health check at http://localhost:8002/health.
 
+## Run the local app
+
+The Live Analysis page is the control panel of the local Niyosh app. To use it, run the app on your own machine (port 8002) — that is what keeps audio, documents, and transcripts private.
+
+**Requirements:** Python 3.12 and a free port 8002.
+
+**Launcher (recommended):** verifies Python, reuses (or creates) the virtual environment, installs dependencies only when missing, starts the backend, and opens the Live page.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\start-windows.ps1
+```
+
+**Manual start:**
+
+1. Create and activate a virtual environment:
+   ```powershell
+   python -m venv .venv
+   .venv\Scripts\activate
+   ```
+2. Install dependencies:
+   ```powershell
+   pip install -r backend/requirements.txt
+   ```
+3. Start the backend on `127.0.0.1:8002` (from the `backend/` folder):
+   ```powershell
+   uvicorn main:app --host 127.0.0.1 --port 8002
+   ```
+4. Open the Live page: https://soheilon21-a11y.github.io/live-meeting-legal-companion/live/
+
+The page only ever contacts `127.0.0.1:8002` — your own machine.
+
 ## Privacy
 
 0 external requests · 0 cookies · 0 trackers — enforced by the build and CI. See `docs/SECURITY.md`.
