@@ -1,4 +1,16 @@
-# Model download script
+# Scripts
+
+## Launcher (recommended)
+
+`scripts/start-windows.ps1` is the recommended way to run Niyosh on Windows. It verifies Python, reuses (or creates) the virtual environment, installs `backend/requirements.txt` only when packages are missing, starts the backend on `127.0.0.1:8002`, then opens the Live Analysis control panel. Run it from a PowerShell prompt:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\start-windows.ps1
+```
+
+It works fully offline once the virtual environment exists — it only reaches the network to install missing packages.
+
+## Model download script
 
 `scripts/download_models.py` downloads and caches every AI model Niyosh needs, so the product runs **fully offline** afterwards. Run it once while you have internet (e.g. from Tehran on a good connection); after that, no model will ever be fetched again.
 
