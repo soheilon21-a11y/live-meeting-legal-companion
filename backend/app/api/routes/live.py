@@ -51,7 +51,8 @@ def _esc(text: str) -> str:
 def _transcribe_audio(file: UploadFile) -> dict:
     content = file.file.read()
     try:
-        return transcription.transcribe_audio(content)
+        with live_worker.model_lock:
+            return transcription.transcribe_audio(content)
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc))
 

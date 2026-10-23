@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from app.services import session_store, transcription
+from app.services import live_worker, session_store, transcription
 from main import app
 
 client = TestClient(app)
@@ -11,6 +11,11 @@ def _make_session(session_id: str) -> None:
 
 
 def _fake_transcribe(file_bytes):
+    return {"text": "hello world", "language": "en"}
+
+
+def _fake_transcribe_assert_lock(file_bytes):
+    assert live_worker.model_lock.locked()
     return {"text": "hello world", "language": "en"}
 
 
@@ -92,6 +97,31 @@ def test_transcript_endpoint(monkeypatch):
     assert len(body["transcript"]) == 1
     assert body["transcript"][0]["text"] == "hello world"
     assert body["transcript"][0]["mode"] == "dictation"
+
+
+def test_transcribe_holds_model_lock(monkeypatch):
+    monkeypatch.setattr(transcription, "transcribe_audio", _fake_transcribe_assert_lock)
+    _make_session("lock1")
+    client.post(
+        "/api/live/consent",
+        json={"session_id": "lock1", "country": "DE", "participants": ["A"], "consent_given": True},
+    )
+    resp = client.post(
+        "/api/live/transcribe",
+        data={"session_id": "lock1"},
+        files={"file": ("a.wav", b"fake", "audio/wav")},
+    )
+    assert resp.status_code == 200
+
+
+def test_dictation_holds_model_lock(monkeypatch):
+    monkeypatch.setattr(transcription, "transcribe_audio", _fake_transcribe_assert_lock)
+    _make_session("lock2")
+    resp = client.post(
+        "/api/live/session/lock2/dictation",
+        files={"file": ("a.wav", b"fake", "audio/wav")},
+    )
+    assert resp.status_code == 200
 
 
 def test_transcribe_engine_unavailable(monkeypatch):
