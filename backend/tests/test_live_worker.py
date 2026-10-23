@@ -1,3 +1,4 @@
+import logging
 import threading
 import time
 
@@ -130,3 +131,55 @@ def test_live_transcript_since(monkeypatch):
     entries = resp.json()["transcript"]
     assert any(e["chunk_index"] == 1 for e in entries)
     assert all(e["chunk_index"] > 0 for e in entries)
+
+
+def test_process_chunk_failure_logs_marker_no_leak(monkeypatch, caplog):
+    def boom(b):
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(transcription, "transcribe_audio", boom)
+    _make_session("fail1")
+    with caplog.at_level(logging.ERROR, logger="app.services.live_worker"):
+        live_worker.process_chunk("fail1", 7, b"\x00\x01\x02sensitive-audio")
+
+    entry = next(
+        e for e in session_store.get_transcript("fail1") if e.get("chunk_index") == 7
+    )
+    assert entry["text"] == "[transcription failed — audio preserved]"
+    assert entry["language"] is None
+
+    text = caplog.text
+    assert "live transcription failed" in text
+    assert "session=fail1" in text
+    assert "chunk=7" in text
+    assert "sensitive-audio" not in text
+    assert "audio preserved" not in text
+
+
+def test_flush_waits_for_inflight(monkeypatch):
+    started = threading.Event()
+    release = threading.Event()
+
+    def slow_transcribe(b):
+        started.set()
+        release.wait(timeout=5)
+        return {"text": "x", "language": "en"}
+
+    monkeypatch.setattr(transcription, "transcribe_audio", slow_transcribe)
+    _make_session("inflight1")
+    live_worker.enqueue_chunk("inflight1", 0, b"a")
+    assert started.wait(timeout=5)
+
+    result = {}
+
+    def do_flush():
+        result["n"] = live_worker.flush("inflight1")
+
+    t = threading.Thread(target=do_flush)
+    t.start()
+    time.sleep(0.2)
+    assert result == {}
+    release.set()
+    t.join(timeout=5)
+    assert not t.is_alive()
+    assert result["n"] == 0

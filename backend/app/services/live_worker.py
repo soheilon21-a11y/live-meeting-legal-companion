@@ -1,9 +1,13 @@
+import logging
 import queue
 import threading
+import time
 from datetime import datetime, timezone
 
 from app.core.config import settings
 from app.services import session_store, transcription
+
+log = logging.getLogger(__name__)
 
 # ASR and the LLM must never run concurrently (8 GB RAM constraint). Both
 # acquire this lock before using the CPU-bound model.
@@ -51,26 +55,46 @@ def status(session_id: str) -> dict:
     }
 
 
+_inflight_cond = threading.Condition()
+_inflight: dict[str, int] = {}
+
+
 def process_chunk(session_id: str, chunk_index: int, audio_bytes: bytes) -> None:
+    with _inflight_cond:
+        _inflight[session_id] = _inflight.get(session_id, 0) + 1
     try:
-        with model_lock:
-            result = transcription.transcribe_audio(audio_bytes)
-        text = result.get("text", "")
-        language = result.get("language")
-    except Exception:
-        text = "[transcription failed — audio preserved]"
-        language = None
-    session_store.append_transcript(
-        session_id,
-        {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "mode": "live",
-            "chunk_index": chunk_index,
-            "text": text,
-            "language": language,
-        },
-    )
-    _state_for(session_id)["processed"] += 1
+        try:
+            with model_lock:
+                result = transcription.transcribe_audio(audio_bytes)
+            text = result.get("text", "")
+            language = result.get("language")
+        except Exception:
+            log.exception(
+                "live transcription failed session=%s chunk=%s size=%dB",
+                session_id,
+                chunk_index,
+                len(audio_bytes),
+            )
+            text = "[transcription failed — audio preserved]"
+            language = None
+        session_store.append_transcript(
+            session_id,
+            {
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "mode": "live",
+                "chunk_index": chunk_index,
+                "text": text,
+                "language": language,
+            },
+        )
+        _state_for(session_id)["processed"] += 1
+    finally:
+        with _inflight_cond:
+            if _inflight[session_id] > 1:
+                _inflight[session_id] -= 1
+            else:
+                del _inflight[session_id]
+            _inflight_cond.notify_all()
 
 
 def _drain_queue(session_id: str, limit: int) -> int:
@@ -115,7 +139,22 @@ def _process_backlog(session_id: str, limit: int) -> int:
 def flush(session_id: str, limit: int = 100) -> int:
     total = _drain_queue(session_id, limit)
     total += _process_backlog(session_id, limit - total)
+    _wait_inflight(session_id)
     return total
+
+
+def _wait_inflight(session_id: str, timeout: float = 60.0) -> None:
+    with _inflight_cond:
+        deadline = time.monotonic() + timeout
+        while _inflight.get(session_id, 0) > 0:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                log.warning(
+                    "live flush timed out waiting for in-flight transcription session=%s",
+                    session_id,
+                )
+                return
+            _inflight_cond.wait(timeout=remaining)
 
 
 def _worker_loop() -> None:
@@ -127,7 +166,12 @@ def _worker_loop() -> None:
         try:
             process_chunk(*item)
         except Exception:
-            pass  # a bad chunk must never kill the worker; the raw audio is preserved on disk
+            log.exception(
+                "live transcription failed session=%s chunk=%s size=%dB",
+                item[0],
+                item[1],
+                len(item[2]),
+            )
         _chunk_queue.task_done()
 
 

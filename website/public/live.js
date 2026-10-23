@@ -473,6 +473,8 @@ deleteBtn.addEventListener("click", async () => {
   } catch (e) {}
   sessionId = null;
   transcript = [];
+  if (sliceTimer) { clearInterval(sliceTimer); sliceTimer = null; }
+  sessionActive = false;
   fileInput.value = "";
   audioFileInput.value = "";
   resultEl.replaceChildren();
@@ -506,6 +508,12 @@ let lastSeenIndex = -1;
 let pollTimer = null;
 let isRecording = false;
 let recordingMode = "dictation";
+let sliceTimer = null;
+let sessionActive = false;
+let stopInProgress = false;
+let stopResolve = null;
+const inFlightUploads = new Set();
+const SLICE_MS = 15000;
 
 function setMeetingStatus(state, text) {
   meetingStatus.className = "meeting-status status-" + state;
@@ -545,7 +553,7 @@ async function uploadChunk(blob, index) {
     );
     if (r.status === 403) {
       setMeetingStatus("idle", MEET.errConsent);
-      await stopRecording();
+      stopRecording();
       return;
     }
     if (!r.ok) {
@@ -582,6 +590,39 @@ async function pollTranscript() {
   }
 }
 
+function startRecorder() {
+  const mime = pickMimeType();
+  mediaRecorder = mime
+    ? new MediaRecorder(mediaStream, { mimeType: mime })
+    : new MediaRecorder(mediaStream);
+  mediaRecorder.ondataavailable = (ev) => {
+    if (ev.data && ev.data.size > 0) {
+      const p = uploadChunk(ev.data, chunkIndex++);
+      inFlightUploads.add(p);
+      p.finally(() => inFlightUploads.delete(p));
+    }
+  };
+  mediaRecorder.onstop = () => {
+    const resolve = stopResolve;
+    stopResolve = null;
+    if (sessionActive && mediaStream) {
+      try {
+        startRecorder();
+      } catch (e) {
+        console.error("MediaRecorder recreation failed:", e && e.name, "-", e && e.message);
+        try {
+          startRecorder();
+        } catch (e2) {
+          console.error("MediaRecorder recreation retry failed:", e2 && e2.name, "-", e2 && e2.message);
+          setMeetingStatus("idle", MEET.errorChunk);
+        }
+      }
+    }
+    if (resolve) resolve();
+  };
+  mediaRecorder.start();
+}
+
 async function startRecording() {
   if (!sessionId && !(await ensureSession())) {
     setMeetingStatus("idle", I18N.errSessionCreate);
@@ -598,14 +639,13 @@ async function startRecording() {
     setMeetingStatus("idle", MEET.micDenied);
     return;
   }
-  const mime = pickMimeType();
-  mediaRecorder = mime
-    ? new MediaRecorder(mediaStream, { mimeType: mime })
-    : new MediaRecorder(mediaStream);
-  mediaRecorder.ondataavailable = (ev) => {
-    if (ev.data && ev.data.size > 0) uploadChunk(ev.data, chunkIndex++);
-  };
-  mediaRecorder.start(15000);
+  sessionActive = true;
+  try {
+    startRecorder();
+  } catch (e) {
+    setMeetingStatus("idle", MEET.errorChunk);
+    return;
+  }
   isRecording = true;
   meetingStart.hidden = true;
   meetingStop.hidden = false;
@@ -614,16 +654,27 @@ async function startRecording() {
   setMeetingStatus("recording");
   pollTimer = setInterval(pollTranscript, 3000);
   obsPollTimer = setInterval(pollObservations, 10000);
+  sliceTimer = setInterval(() => {
+    if (sessionActive && mediaRecorder && mediaRecorder.state === "recording") {
+      mediaRecorder.stop();
+    }
+  }, SLICE_MS);
 }
 
 async function stopRecording() {
-  if (mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
+  if (stopInProgress) return;
+  stopInProgress = true;
+  sessionActive = false;
+  if (sliceTimer) { clearInterval(sliceTimer); sliceTimer = null; }
   if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
   if (obsPollTimer) { clearInterval(obsPollTimer); obsPollTimer = null; }
   isRecording = false;
-  meetingStart.hidden = false;
-  meetingStop.hidden = true;
-  meetingDelay.hidden = true;
+  if (mediaRecorder) {
+    const stopped = new Promise((res) => { stopResolve = res; });
+    if (mediaRecorder.state !== "inactive") mediaRecorder.stop();
+    await stopped;
+  }
+  await Promise.allSettled([...inFlightUploads]);
   if (mediaStream) {
     mediaStream.getTracks().forEach((t) => t.stop());
     mediaStream = null;
@@ -633,12 +684,20 @@ async function stopRecording() {
     if (sessionId) await fetch(`${API}/api/live/session/${sessionId}/stop`, { method: "POST" });
   } catch (e) {}
   mediaRecorder = null;
+  meetingStart.hidden = false;
+  meetingStop.hidden = true;
+  meetingDelay.hidden = true;
   await pollTranscript();
   setMeetingStatus("idle");
+  stopInProgress = false;
 }
 
 meetingStart.addEventListener("click", startRecording);
 meetingStop.addEventListener("click", stopRecording);
+
+window.addEventListener("beforeunload", () => {
+  if (sliceTimer) { clearInterval(sliceTimer); sliceTimer = null; }
+});
 
 // --- Observations (Phase 4b) ---
 const observationsList = $("live-observations");
