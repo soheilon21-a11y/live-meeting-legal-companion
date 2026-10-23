@@ -396,8 +396,20 @@ recordConsentBtn.addEventListener("click", async () => {
   }
 });
 
+function applyAudioCaptureState() {
+  const disabled = disableAudio.checked;
+  audioControls.hidden = disabled;
+  document.querySelectorAll('input[name="meeting-mode"]').forEach((radio) => {
+    radio.disabled = disabled;
+  });
+  meetingStart.disabled = disabled || backendUp === false;
+}
+
 disableAudio.addEventListener("change", () => {
-  audioControls.hidden = disableAudio.checked;
+  if (disableAudio.checked && sessionActive) {
+    stopRecording();
+  }
+  applyAudioCaptureState();
 });
 
 transcribeBtn.addEventListener("click", async () => {
@@ -793,6 +805,7 @@ function setBackendDown(down) {
       b.removeAttribute("title");
     }
   }
+  applyAudioCaptureState();
 }
 
 function markBackendDown() {

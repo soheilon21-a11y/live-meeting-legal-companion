@@ -132,7 +132,7 @@
       "consentRecorded": "Consent recorded for this session.",
       "noSession": "Upload a document first to create a session.",
       "disableAudio": "Disable audio capture for this session",
-      "disableAudioHint": "When enabled, the audio controls below are hidden. You remain responsible for verifying local recording laws before recording."
+      "disableAudioHint": "When enabled, audio capture is disabled for this session: the Audio controls are hidden and Live Meeting recording is blocked (any recording in progress is stopped). You remain responsible for verifying local recording laws before recording."
     },
     "audio": {
       "sectionTitle": "Audio",

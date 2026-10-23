@@ -132,7 +132,7 @@
       "consentRecorded": "Einwilligung für diese Sitzung aufgezeichnet.",
       "noSession": "Laden Sie zuerst ein Dokument hoch, um eine Sitzung zu erstellen.",
       "disableAudio": "Audioaufnahme für diese Sitzung deaktivieren",
-      "disableAudioHint": "Wenn aktiviert, werden die Audio-Steuerelemente unten ausgeblendet. Sie bleiben dafür verantwortlich, die lokalen Aufnahmegesetze vor der Aufnahme zu prüfen."
+      "disableAudioHint": "Wenn aktiviert, ist die Audioaufnahme für diese Sitzung deaktiviert: Die Audio-Steuerelemente werden ausgeblendet und die Live-Besprechungsaufnahme wird blockiert (eine laufende Aufnahme wird beendet). Sie bleiben dafür verantwortlich, die lokalen Aufnahmegesetze vor der Aufnahme zu prüfen."
     },
     "audio": {
       "sectionTitle": "Audio",
