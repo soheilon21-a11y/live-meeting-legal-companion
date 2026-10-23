@@ -92,6 +92,10 @@ class CorrectSpeakerRequest(BaseModel):
     speaker: str
 
 
+class CaptureRequest(BaseModel):
+    capture_disabled: bool
+
+
 class TTSRequest(BaseModel):
     text: str
     lang: str = "en"

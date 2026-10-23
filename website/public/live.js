@@ -410,6 +410,23 @@ disableAudio.addEventListener("change", () => {
     stopRecording();
   }
   applyAudioCaptureState();
+  if (sessionId) {
+    fetch(`${API}/api/live/session/${sessionId}/capture`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ capture_disabled: disableAudio.checked }),
+    })
+      .then((r) => {
+        if (r.status === 409) {
+          consentStatus.textContent = MEET.errCaptureDisabled;
+        } else if (!r.ok) {
+          consentStatus.textContent = I18N.errGeneric;
+        }
+      })
+      .catch(() => {
+        consentStatus.textContent = I18N.errGeneric;
+      });
+  }
 });
 
 transcribeBtn.addEventListener("click", async () => {

@@ -12,6 +12,7 @@ from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 from app.api.models import (
     AnalyzeRequest,
     AnalyzeResponse,
+    CaptureRequest,
     ConsentRequest,
     ConsentResponse,
     CorrectSpeakerRequest,
@@ -55,6 +56,14 @@ def _transcribe_audio(file: UploadFile) -> dict:
             return transcription.transcribe_audio(content)
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc))
+
+
+def _require_capture_enabled(session_id: str) -> None:
+    session = session_store.load_session(session_id)
+    if session and session.get("capture_disabled"):
+        raise HTTPException(
+            status_code=409, detail="Audio capture disabled for this session"
+        )
 
 
 def _build_pdf(session_id: str, filename: str, findings: list[dict]) -> bytes:
@@ -175,6 +184,7 @@ def transcribe(
             status_code=403,
             detail="Audio capture refused: no recorded consent for this session",
         )
+    _require_capture_enabled(session_id)
     result = _transcribe_audio(file)
     session_store.append_transcript(
         session_id,
@@ -194,6 +204,7 @@ def dictation(
 ) -> DictationResponse:
     if session_store.load_session(session_id) is None:
         raise HTTPException(status_code=404, detail="Unknown session")
+    _require_capture_enabled(session_id)
     result = _transcribe_audio(file)
     session_store.append_transcript(
         session_id,
@@ -212,6 +223,14 @@ def get_transcript(session_id: str) -> TranscriptResponse:
         raise HTTPException(status_code=404, detail="Unknown session")
     transcript = session_store.get_transcript(session_id)
     return TranscriptResponse(session_id=session_id, transcript=transcript)
+
+
+@router.post("/session/{session_id}/capture")
+def set_capture(session_id: str, body: CaptureRequest) -> dict:
+    if session_store.load_session(session_id) is None:
+        raise HTTPException(status_code=404, detail="Unknown session")
+    session_store.set_capture_disabled(session_id, body.capture_disabled)
+    return {"session_id": session_id, "capture_disabled": body.capture_disabled}
 
 
 @router.post("/session/{session_id}/diarize")
@@ -272,6 +291,8 @@ def upload_chunk(
     if mode not in ("full", "dictation"):
         raise HTTPException(status_code=400, detail="Unknown mode")
 
+    _require_capture_enabled(session_id)
+
     content = file.file.read()
     audio_dir = settings.DATA_DIR / "audio" / session_id
     audio_dir.mkdir(parents=True, exist_ok=True)
@@ -296,9 +317,10 @@ def live_transcript(session_id: str, since: int = 0) -> dict:
 
 @router.get("/session/{session_id}/status")
 def status(session_id: str) -> dict:
-    if session_store.load_session(session_id) is None:
+    session = session_store.load_session(session_id)
+    if session is None:
         raise HTTPException(status_code=404, detail="Unknown session")
-    return live_worker.status(session_id)
+    return {**live_worker.status(session_id), "capture_disabled": session.get("capture_disabled", False)}
 
 
 @router.post("/session/{session_id}/stop")

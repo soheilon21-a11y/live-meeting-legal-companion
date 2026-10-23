@@ -172,7 +172,8 @@
       "delayNote": "Transcription appears with a 30-90 second delay — this is normal.",
       "micPermissionDenied": "Microphone permission denied. Please allow microphone access.",
       "errConsent": "Audio capture refused: no recorded consent for this session.",
-      "errorChunk": "Failed to send an audio chunk."
+      "errorChunk": "Failed to send an audio chunk.",
+      "errCaptureDisabled": "Audio capture is disabled for this session."
     },
     "observations": {
       "title": "Observations",

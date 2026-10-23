@@ -89,6 +89,19 @@ def set_speaker(session_id: str, chunk_index: int, speaker: str) -> bool:
         return updated
 
 
+def set_capture_disabled(session_id: str, disabled: bool) -> None:
+    with _lock:
+        data = load_session(session_id)
+        data["capture_disabled"] = disabled
+        data.setdefault("control_events", []).append(
+            {
+                "ts": datetime.now(timezone.utc).isoformat(),
+                "capture_disabled": disabled,
+            }
+        )
+        _path(session_id).write_text(json.dumps(data), encoding="utf-8")
+
+
 def delete_session(session_id: str) -> None:
     p = _path(session_id)
     if p.exists():
