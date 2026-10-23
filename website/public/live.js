@@ -3,6 +3,7 @@ const I18N = root.dataset;
 const API = "http://localhost:8002";
 const HEALTH_URL = "http://127.0.0.1:8002/health";
 let backendUp = null;
+let healthCheckInFlight = false;
 let sessionId = null;
 let transcript = [];
 const $ = (id) => document.getElementById(id);
@@ -25,6 +26,8 @@ let lastFindings = [];
 let currentAudio = null;
 
 async function checkHealth() {
+  if (healthCheckInFlight) return backendUp;
+  healthCheckInFlight = true;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 2500);
   let up = false;
@@ -35,6 +38,7 @@ async function checkHealth() {
     up = false;
   } finally {
     clearTimeout(timer);
+    healthCheckInFlight = false;
   }
   applyHealth(up);
   return up;
