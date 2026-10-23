@@ -168,6 +168,7 @@
       "processing": "Processing backlog",
       "idle": "Idle",
       "transcriptTitle": "Live transcript",
+      "emptySegment": "[no speech detected]",
       "delayNote": "Transcription appears with a 30-90 second delay — this is normal.",
       "micPermissionDenied": "Microphone permission denied. Please allow microphone access.",
       "errConsent": "Audio capture refused: no recorded consent for this session.",

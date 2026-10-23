@@ -590,10 +590,9 @@ async function pollTranscript() {
     for (const seg of d.transcript || []) {
       if (seg.chunk_index > lastSeenIndex) lastSeenIndex = seg.chunk_index;
       const text = (seg.text || "").trim();
-      if (!text) continue;
       const li = el("li", "transcript-item");
       li.appendChild(el("span", "transcript-time", new Date(seg.timestamp).toLocaleTimeString()));
-      li.appendChild(el("span", "transcript-text", text));
+      li.appendChild(el("span", "transcript-text", text || MEET.emptySegment));
       meetingTranscript.appendChild(li);
     }
     meetingTranscriptWrap.hidden = meetingTranscript.children.length === 0;

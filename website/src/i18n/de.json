@@ -168,6 +168,7 @@
       "processing": "Verarbeitungsrückstand",
       "idle": "Bereit",
       "transcriptTitle": "Live-Transkript",
+      "emptySegment": "[keine Sprache erkannt]",
       "delayNote": "Die Transkription erscheint mit 30-90 Sekunden Verzögerung — das ist normal.",
       "micPermissionDenied": "Mikrofonzugriff verweigert. Bitte erlauben Sie den Mikrofonzugriff.",
       "errConsent": "Audioaufnahme verweigert: Keine aufgezeichnete Einwilligung für diese Sitzung.",
