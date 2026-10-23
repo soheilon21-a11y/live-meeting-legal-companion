@@ -66,7 +66,7 @@ L8 — No server-side capture-disabled enforcement (defense in depth)
 
 A capture-disabled flag would let /chunk, /transcribe, and /dictation reject uploads (409) for a capture-disabled session. Deferred by the L6 ruling (client-side only this round).
 
-Status: OPEN (deferred by ruling).
+Status: FIXED — 8aaec7d (server-side capture-disabled flag; 409 gate on /chunk, /transcribe, /dictation).
 
 
 
