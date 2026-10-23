@@ -24,7 +24,7 @@ L3 — No browser-level E2E test
 
 pytest covers backend logic; no automated browser test exercises the live.js recording flow (MediaRecorder behavior is the risk area).
 
-Status: OPEN.
+Status: FIXED — c6e3c28 (Playwright Chromium suite; 6 cases against the real uvicorn app with a fake-ASR env hook).
 
 
 
