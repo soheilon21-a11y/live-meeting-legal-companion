@@ -1,3 +1,4 @@
+import os
 from io import BytesIO
 
 from app.core.config import settings
@@ -7,10 +8,23 @@ ENGINE_MISSING = "Transcription engine not available — install faster-whisper"
 _model = None
 
 
+class _FakeASR:  # test-only: fixed silent segment, no model download
+    def transcribe(self, audio, beam_size=1, **kwargs):
+        class _Seg:
+            text = ""
+
+        class _Info:
+            language = "en"
+
+        return iter([_Seg()]), _Info()
+
+
 def _load_model():
     global _model
     if _model is not None:
         return _model
+    if os.getenv("NIYOSH_E2E_FAKE_ASR"):
+        return _FakeASR()  # test-only: no model download
     try:
         from faster_whisper import WhisperModel
     except ImportError:
