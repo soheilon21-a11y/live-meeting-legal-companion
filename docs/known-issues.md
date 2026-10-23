@@ -82,4 +82,6 @@ Backlog (separate from ledger)
 
 Whisper language lock + legal-vocabulary initial_prompt for live mode.
 
+Status: FIXED — 316c501 (live path pinned to LIVE_WHISPER_LANGUAGE and a 21-word legal-vocabulary initial_prompt, ~42 BPE tokens, under the 50-token cap per slice).
+
 Accepted trade-off (commit 1f344c0): millisecond audio gap at slice boundaries from per-slice MediaRecorder recreation.
