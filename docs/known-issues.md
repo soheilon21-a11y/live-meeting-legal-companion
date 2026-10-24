@@ -85,3 +85,18 @@ Whisper language lock + legal-vocabulary initial_prompt for live mode.
 Status: FIXED — 316c501 (live path pinned to LIVE_WHISPER_LANGUAGE and a 21-word legal-vocabulary initial_prompt, ~42 BPE tokens, under the 50-token cap per slice).
 
 Accepted trade-off (commit 1f344c0): millisecond audio gap at slice boundaries from per-slice MediaRecorder recreation.
+
+
+Nano-notes — adjudicated observations (2026-10-24 arbitration round)
+
+Non-blocking observations surfaced during the A/B/C arbitration and deployment audit. None is a defect that bites today; recorded so they cannot be lost.
+
+n1 — E2E port-8002 collision is loud, not silent. If a dev backend occupies port 8002 when npm run test:e2e starts, the harness's own uvicorn fails to bind and readiness probes hit the wrong server; tests fail because the temp DATA_DIR never fills. Rule: free port 8002 before running the suite. Status: ACCEPTED — operational rule; pre-flight port check optional future hardening.
+
+n2 — live.spec.ts case 4 depends on live.js internals. page.evaluate reads the top-level `let mediaStream` via global-lexical reachability; works for a classic script, breaks if live.js ever becomes an ES module. Status: ACCEPTED — fragility note for future refactors.
+
+n3 — Straggler-chunk test posts a non-webm buffer. Valid only because the L8 409 admission gate fires before content parsing. Do not copy that multipart body as a valid-upload example. Status: ACCEPTED.
+
+n4 — Build version stamps not reproducible across Windows/CI. Repo had no .gitattributes; with core.autocrlf=true the Windows working tree is CRLF, so local astro builds stamp v= from CRLF bytes while CI stamps from LF (observed 2026-10-24: local v=20ca4e5e vs deployed v=26211a3c; CR-stripped sha256 identical). Status: FIXED — 3a53537 (.gitattributes pins LF; worktree re-materialized).
+
+n5 — Dead 409 branch in the capture-toggle handler. live.js's disable-toggle handler carries a r.status===409 branch that cannot fire from that endpoint (capture returns 200/404); the real 409 arrives from chunk upload (L8). Harmless dead code. Status: ACCEPTED — remove at the next live.js touch or leave.
