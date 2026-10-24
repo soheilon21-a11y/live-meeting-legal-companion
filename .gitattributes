@@ -1,0 +1,6 @@
+# LF everywhere (repo + working tree) so build version stamps are reproducible (nano-note n4)
+* text=auto eol=lf
+
+# Windows-only shells keep CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
