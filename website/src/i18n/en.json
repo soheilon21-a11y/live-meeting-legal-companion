@@ -2,10 +2,10 @@
   "brand": "Niyosh",
   "meta": {
     "title": "Niyosh — Live Legal Meeting Companion",
-    "description": "A local, privacy-first meeting companion for legal professionals. v1 in development."
+    "description": "A local, privacy-first meeting companion for legal professionals, with live transcription and local AI."
   },
   "notice": {
-    "v1InDevelopment": "v1 in development"
+    "v1InDevelopment": "First stable release available"
   },
   "hero": {
     "title": "Niyosh — Live Legal Meeting Companion",
