@@ -10,6 +10,7 @@ A local, privacy-first meeting companion for legal professionals. Niyosh retriev
 - Findings are kept in a per-session history, can be exported as PDF, and can be deleted at any time.
 - **Audio capture (Phase 3):** two modes — see below.
 - **Live Meeting (Phase 4a):** record the meeting and see a live transcript with a 30-90 second delay — two modes: dictation-only (always available) and full meeting (consent required).
+- **Standalone audio transcription:** Upload a WAV, MP3, or M4A file in the Audio section to transcribe it locally and add the transcript to the current session.
 - **Speaker attribution (Phase 4c):** after a meeting, assign an approximate "Speaker N" label to each 15-second transcript chunk (local SpeechBrain ECAPA-TDNN + clustering), then manually correct any label.
 - **Text-to-speech (Phase 5a):** read findings aloud using local Piper TTS (EN + DE voices). A "Read aloud" button sits on each finding card and next to the session findings summary, with a voice selector (auto / English / German). The voice is synthetic and approximate; audio is streamed straight to the browser and never persisted.
 - The human legal professional is the sole decision-maker. Niyosh retrieves and drafts; it never decides.
@@ -31,6 +32,10 @@ Record the meeting from the Live page and watch a live transcript appear — wit
 - **Full meeting (all voices — consent required).** The backend refuses capture (`403`) without recorded consent for the session.
 
 Audio is captured in 15-second chunks, saved to disk first, then transcribed sequentially by a single background worker. Raw audio is never deleted automatically — you decide via the existing delete-session action.
+
+## Standalone audio transcription
+
+In the Audio section, upload a WAV, MP3, or M4A file to add its transcript to the current session. Transcription runs locally using the same `faster-whisper` engine as live audio transcription; like live transcription, it requires the **optional** `faster-whisper` install (see "Optional: enable transcription" below), and without it the endpoint returns a clear error.
 
 ## Speaker attribution (Phase 4c)
 
