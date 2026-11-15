@@ -29,6 +29,9 @@ const runLocalHref = lang === 'de' ? `${import.meta.env.BASE_URL}/de/#run-local`
   data-err-upload={t.live.error.upload}
   data-err-analyze={t.live.error.analyze}
   data-delete-confirm={t.live.deleteConfirm}
+  data-deleting={t.live.deleting}
+  data-delete-success={t.live.deleteSuccess}
+  data-delete-error={t.live.deleteError}
   data-source-label={t.live.consent.sourceLabel}
   data-country-disclaimer={t.live.consent.disclaimer}
   data-consent-no-session={t.live.consent.noSession}
@@ -61,6 +64,16 @@ const runLocalHref = lang === 'de' ? `${import.meta.env.BASE_URL}/de/#run-local`
   data-tts-empty={t.live.tts.empty}
   data-disclaimer={t.live.disclaimer}
   data-disabled-hint={t.live.backend.disabledHint}
+  data-backend-title={t.live.backend.title}
+  data-backend-text={t.live.backend.text}
+  data-lna-needed={t.live.backend.lnaNeeded}
+  data-lna-text={t.live.backend.lnaText}
+  data-lna-denied={t.live.backend.lnaDenied}
+  data-lna-denied-text={t.live.backend.lnaDeniedText}
+  data-err-connection-refused={t.live.error.connectionRefused}
+  data-err-lna-denied={t.live.error.lnaDenied}
+  data-err-lna-needed={t.live.error.lnaNeeded}
+  data-err-cors-blocked={t.live.error.corsBlocked}
 >
   <h1>{t.live.title}</h1>
   <p class="live-subtitle">{t.live.subtitle}</p>
@@ -193,6 +206,7 @@ const runLocalHref = lang === 'de' ? `${import.meta.env.BASE_URL}/de/#run-local`
       <button type="button" id="live-export" class="live-export">{t.live.export}</button>
       <button type="button" id="live-delete" class="live-delete">{t.live.delete}</button>
     </div>
+    <p id="live-delete-status" class="live-status" role="status"></p>
   </section>
 
   <p class="local-note">{t.live.localNote}</p>

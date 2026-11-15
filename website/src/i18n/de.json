@@ -96,10 +96,17 @@
     "export": "Ergebnisse exportieren (PDF)",
     "delete": "Sitzung löschen",
     "deleteConfirm": "Diese Sitzung und alle zugehörigen Daten löschen?",
-    "localNote": "Die Live-Analyse kommuniziert mit Ihrer lokal laufenden Niyosh-Anwendung auf localhost:8002.",
+    "deleting": "Lösche …",
+    "deleteSuccess": "Sitzung gelöscht.",
+    "deleteError": "Sitzung konnte nicht gelöscht werden — sie ist weiterhin verfügbar. Prüfen Sie die App und versuchen Sie es erneut.",
+    "localNote": "Die Live-Analyse kommuniziert mit Ihrer lokal laufenden Niyosh-Anwendung auf 127.0.0.1:8002.",
     "backend": {
       "title": "Lokale Anwendung erforderlich",
       "text": "Dies ist das Bedienfeld der lokalen Niyosh-Anwendung. Audio, Dokumente und Transkripte verlassen diesen Rechner nie — deshalb ist die lokale Anwendung erforderlich.",
+      "lnaNeeded": "Browser-Loopback-Zugriff erforderlich",
+      "lnaText": "Chrome benötigt Ihre Erlaubnis, um eine Verbindung zur lokalen Niyosh-Anwendung unter 127.0.0.1:8002 herzustellen. Klicken Sie auf „Verbindung erneut prüfen“, um den Zugriff zu gewähren.",
+      "lnaDenied": "Loopback-Zugriff blockiert",
+      "lnaDeniedText": "Chrome hat den Zugriff auf die lokale Niyosh-Anwendung blockiert. Klicken Sie auf das Schlosssymbol → Seiteninformationen → Zugriff auf lokale Netzwerke → „Zulassen“, und klicken Sie dann auf „Verbindung erneut prüfen“.",
       "docsLink": "Lokale Anwendung ausführen",
       "lastChecked": "Zuletzt geprüft:",
       "recheck": "Verbindung erneut prüfen",
@@ -109,7 +116,11 @@
       "upload": "Upload fehlgeschlagen.",
       "analyze": "Analyse fehlgeschlagen.",
       "generic": "Etwas ist schiefgelaufen.",
-      "sessionCreate": "Aufnahmesitzung konnte nicht erstellt werden — stellen Sie sicher, dass die App läuft, und versuchen Sie es erneut."
+      "sessionCreate": "Aufnahmesitzung konnte nicht erstellt werden — stellen Sie sicher, dass die App läuft, und versuchen Sie es erneut.",
+      "connectionRefused": "Verbindung abgelehnt — die lokale Anwendung läuft nicht.",
+      "lnaDenied": "Loopback-Zugriff vom Browser verweigert.",
+      "lnaNeeded": "Loopback-Zugriff erforderlich — klicken Sie auf „Verbindung erneut prüfen“.",
+      "corsBlocked": "Cross-Origin-Anfrage blockiert (CORS)."
     },
     "consent": {
       "sectionTitle": "Sitzung einrichten",
@@ -138,7 +149,7 @@
       "sectionTitle": "Audio",
       "modeLabel": "Aufnahmemodus",
       "modeDictation": "Nur Diktat (meine Stimme)",
-      "modeDictationHint": "Immer verfügbar. Keine Einwilligung erforderlich.",
+      "modeDictationHint": "Immer verfügbar. Kein Einwilligungsschritt in der App erforderlich.",
       "modeFull": "Gesamte Besprechung (Einwilligung erforderlich)",
       "modeFullHint": "Erfordert eine aufgezeichnete Einwilligung für diese Sitzung.",
       "fileLabel": "Audiodatei transkribieren (WAV, MP3 oder M4A)",
@@ -160,7 +171,7 @@
         "full": "Gesamte Besprechung (alle Stimmen — Einwilligung erforderlich)",
         "fullHint": "Nimmt alle Sprechenden auf. Erfordert eine aufgezeichnete Einwilligung für diese Sitzung.",
         "dictation": "Nur Diktat (meine Stimme — immer verfügbar)",
-        "dictationHint": "Nimmt nur Ihre Stimme auf. Immer verfügbar, keine Einwilligung erforderlich."
+        "dictationHint": "Nimmt nur Ihre Stimme auf. Kein Einwilligungsschritt in der App erforderlich — Sie bleiben dafür verantwortlich, die Aufnahmegesetze zu prüfen."
       },
       "start": "Aufnahme starten",
       "stop": "Aufnahme stoppen",
