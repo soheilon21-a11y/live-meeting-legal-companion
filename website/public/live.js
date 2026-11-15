@@ -1,15 +1,16 @@
 const root = document.querySelector(".live");
 const I18N = root.dataset;
-const API = "http://localhost:8002";
+const API = "http://127.0.0.1:8002";
 const HEALTH_URL = "http://127.0.0.1:8002/health";
 let backendUp = null;
 let healthCheckInFlight = false;
+let healthRecheckPending = false;
 let sessionId = null;
 let transcript = [];
 const $ = (id) => document.getElementById(id);
 const fileInput = $("live-file"), pointInput = $("live-point"), analyzeBtn = $("live-analyze");
 const statusEl = $("live-status"), resultEl = $("live-result"), findingsEl = $("live-findings");
-const exportBtn = $("live-export"), deleteBtn = $("live-delete");
+const exportBtn = $("live-export"), deleteBtn = $("live-delete"), deleteStatus = $("live-delete-status");
 const countrySelect = $("live-country"), countryInfo = $("live-country-info");
 const participantsInput = $("live-participants"), consentCheck = $("live-consent");
 const recordConsentBtn = $("live-record-consent"), consentStatus = $("live-consent-status");
@@ -25,22 +26,73 @@ const ttsReadAll = $("live-tts-read-all");
 let lastFindings = [];
 let currentAudio = null;
 
+// --- Chrome Local Network Access (LNA) ---
+// Chrome 142+ requires user permission for secure-context pages to reach
+// loopback addresses. We query the granular "loopback-network" permission
+// (never the legacy "local-network-access" alias, which can crash older
+// renderers) and declare targetAddressSpace: "loopback" on every fetch.
+let lnaState = null;      // 'granted' | 'prompt' | 'denied' | null
+let lnaStatus = null;     // PermissionStatus, to attach a change listener
+let connectionError = null; // 'refused' | 'lna-needed' | 'lna-denied' | 'cors' | null
+
+async function queryLnaPermissionSafe(permissionName = "loopback-network") {
+  if (!navigator.permissions?.query) {
+    return { state: "prompt", status: null };
+  }
+  try {
+    const status = await navigator.permissions.query({ name: permissionName });
+    return { state: status.state, status };
+  } catch {
+    // Unrecognized permission name; proceed on user gesture
+    return { state: "prompt", status: null };
+  }
+}
+
+function loopbackFetch(url, init = {}) {
+  return window.fetch(url, Object.assign({ targetAddressSpace: "loopback" }, init));
+}
+
+function lnaErrorMessage(defaultMsg) {
+  if (connectionError === "lna-needed") return I18N.errLnaNeeded;
+  if (connectionError === "lna-denied") return I18N.errLnaDenied;
+  if (connectionError === "refused") return I18N.errorConnectionRefused;
+  return defaultMsg;
+}
+
 async function checkHealth() {
-  if (healthCheckInFlight) return backendUp;
+  if (healthCheckInFlight) {
+    // Coalesce concurrent requests into a single pending recheck.
+    healthRecheckPending = true;
+    return backendUp;
+  }
   healthCheckInFlight = true;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 2500);
   let up = false;
+  let errKind = null;
   try {
-    const r = await fetch(HEALTH_URL, { signal: controller.signal });
+    const r = await loopbackFetch(HEALTH_URL, { signal: controller.signal });
     up = r.ok;
+    if (!r.ok) errKind = "http";
   } catch (e) {
     up = false;
+    if (e instanceof TypeError) {
+      if (lnaState === "denied") errKind = "lna-denied";
+      else if (lnaState === "prompt") errKind = "lna-needed";
+      else errKind = "refused";
+    } else {
+      errKind = "unknown";
+    }
   } finally {
     clearTimeout(timer);
     healthCheckInFlight = false;
   }
-  applyHealth(up);
+  applyHealth(up, errKind);
+  if (healthRecheckPending) {
+    // Run at most one queued recheck, after the current result is applied.
+    healthRecheckPending = false;
+    return checkHealth();
+  }
   return up;
 }
 
@@ -53,7 +105,7 @@ window.recheck = recheck;
 async function ensureSession() {
   if (sessionId) return true;
   try {
-    const r = await fetch(`${API}/api/live/session`, { method: "POST" });
+    const r = await loopbackFetch(`${API}/api/live/session`, { method: "POST" });
     if (!r.ok) throw new Error();
     const d = await r.json();
     if (typeof d.session_id !== "string" || !d.session_id.trim()) return false;
@@ -137,7 +189,7 @@ function renderFindings(items) {
 async function loadFindings() {
   if (!sessionId) return;
   try {
-    const r = await fetch(`${API}/api/live/session/${sessionId}/findings`);
+    const r = await loopbackFetch(`${API}/api/live/session/${sessionId}/findings`);
     const d = await r.json();
     renderFindings(d.findings || []);
   } catch (e) {
@@ -174,7 +226,7 @@ async function speakAloud(text) {
   const spoken = content + " " + I18N.disclaimer;
   ttsStatus.textContent = "";
   try {
-    const r = await fetch(`${API}/api/live/session/${sessionId}/speak`, {
+    const r = await loopbackFetch(`${API}/api/live/session/${sessionId}/speak`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text: spoken, lang }),
@@ -192,7 +244,7 @@ async function speakAloud(text) {
   } catch (e) {
     console.error("speakAloud failed:", e && e.name, "-", e && e.message, e);
     if (e instanceof TypeError) markBackendDown();
-    ttsStatus.textContent = I18N.ttsError;
+    ttsStatus.textContent = lnaErrorMessage(I18N.ttsError);
   }
 }
 
@@ -242,7 +294,7 @@ async function loadTranscript() {
   if (!sessionId) return;
   try {
     const r = await withDeadSessionRecovery(() =>
-      fetch(`${API}/api/live/session/${sessionId}/transcript`)
+      loopbackFetch(`${API}/api/live/session/${sessionId}/transcript`)
     );
     if (!r.ok) throw new Error();
     const d = await r.json();
@@ -250,14 +302,14 @@ async function loadTranscript() {
     renderTranscript();
   } catch (e) {
     if (e instanceof TypeError) markBackendDown();
-    audioStatus.textContent = I18N.errTranscript;
+    audioStatus.textContent = lnaErrorMessage(I18N.errTranscript);
   }
 }
 
 async function correctSpeaker(chunkIndex, speaker) {
   if (!sessionId || chunkIndex == null) return;
   try {
-    const r = await fetch(`${API}/api/live/session/${sessionId}/correct-speaker`, {
+    const r = await loopbackFetch(`${API}/api/live/session/${sessionId}/correct-speaker`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ chunk_index: chunkIndex, speaker }),
@@ -272,7 +324,7 @@ async function diarize() {
   if (!sessionId) return;
   diarizeBtn.disabled = true;
   try {
-    const r = await fetch(`${API}/api/live/session/${sessionId}/diarize`, {
+    const r = await loopbackFetch(`${API}/api/live/session/${sessionId}/diarize`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({}),
@@ -301,7 +353,7 @@ fileInput.addEventListener("change", async () => {
   const form = new FormData();
   form.append("file", file);
   try {
-    const r = await fetch(`${API}/api/live/upload`, { method: "POST", body: form });
+    const r = await loopbackFetch(`${API}/api/live/upload`, { method: "POST", body: form });
     if (!r.ok) throw new Error();
     const d = await r.json();
     sessionId = d.session_id;
@@ -322,7 +374,7 @@ fileInput.addEventListener("change", async () => {
     pollObservations();
   } catch (e) {
     if (e instanceof TypeError) markBackendDown();
-    statusEl.textContent = I18N.errUpload;
+    statusEl.textContent = lnaErrorMessage(I18N.errUpload);
   }
 });
 
@@ -336,7 +388,7 @@ analyzeBtn.addEventListener("click", async () => {
   analyzeBtn.disabled = true;
   statusEl.textContent = I18N.analyzing;
   try {
-    const r = await fetch(`${API}/api/live/analyze`, {
+    const r = await loopbackFetch(`${API}/api/live/analyze`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ document_id: sessionId, discussion_point: point }),
@@ -347,7 +399,7 @@ analyzeBtn.addEventListener("click", async () => {
     statusEl.textContent = "";
   } catch (e) {
     if (e instanceof TypeError) markBackendDown();
-    statusEl.textContent = I18N.errAnalyze;
+    statusEl.textContent = lnaErrorMessage(I18N.errAnalyze);
   } finally {
     analyzeBtn.disabled = false;
   }
@@ -360,7 +412,7 @@ countrySelect.addEventListener("change", async () => {
     return;
   }
   try {
-    const r = await fetch(`${API}/api/live/country/${code}`);
+    const r = await loopbackFetch(`${API}/api/live/country/${code}`);
     if (!r.ok) throw new Error();
     const d = await r.json();
     const summary = document.documentElement.lang === "de" ? d.summary_de : d.summary_en;
@@ -383,7 +435,7 @@ recordConsentBtn.addEventListener("click", async () => {
   const participants = participantsInput.value.split(",").map((s) => s.trim()).filter(Boolean);
   const consent_given = consentCheck.checked;
   try {
-    const r = await fetch(`${API}/api/live/consent`, {
+    const r = await loopbackFetch(`${API}/api/live/consent`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ session_id: sessionId, country, participants, consent_given }),
@@ -392,7 +444,7 @@ recordConsentBtn.addEventListener("click", async () => {
     consentStatus.textContent = I18N.consentRecorded;
   } catch (e) {
     if (e instanceof TypeError) markBackendDown();
-    consentStatus.textContent = I18N.errGeneric;
+    consentStatus.textContent = lnaErrorMessage(I18N.errGeneric);
   }
 });
 
@@ -411,7 +463,7 @@ disableAudio.addEventListener("change", () => {
   }
   applyAudioCaptureState();
   if (sessionId) {
-    fetch(`${API}/api/live/session/${sessionId}/capture`, {
+    loopbackFetch(`${API}/api/live/session/${sessionId}/capture`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ capture_disabled: disableAudio.checked }),
@@ -423,8 +475,9 @@ disableAudio.addEventListener("change", () => {
           consentStatus.textContent = I18N.errGeneric;
         }
       })
-      .catch(() => {
-        consentStatus.textContent = I18N.errGeneric;
+      .catch((e) => {
+        if (e instanceof TypeError) markBackendDown();
+        consentStatus.textContent = lnaErrorMessage(I18N.errGeneric);
       });
   }
 });
@@ -453,7 +506,7 @@ transcribeBtn.addEventListener("click", async () => {
   transcribeBtn.disabled = true;
   audioStatus.textContent = I18N.transcribing;
   try {
-    const r = await fetch(url, { method: "POST", body: form });
+    const r = await loopbackFetch(url, { method: "POST", body: form });
     if (r.status === 403) {
       audioStatus.textContent = I18N.errConsent;
       return;
@@ -463,7 +516,7 @@ transcribeBtn.addEventListener("click", async () => {
     await loadTranscript();
   } catch (e) {
     if (e instanceof TypeError) markBackendDown();
-    audioStatus.textContent = I18N.errTranscribe;
+    audioStatus.textContent = lnaErrorMessage(I18N.errTranscribe);
   } finally {
     transcribeBtn.disabled = false;
   }
@@ -494,12 +547,7 @@ exportBtn.addEventListener("click", () => {
   if (sessionId) window.location.href = `${API}/api/live/session/${sessionId}/export`;
 });
 
-deleteBtn.addEventListener("click", async () => {
-  if (!sessionId) return;
-  if (!window.confirm(I18N.deleteConfirm)) return;
-  try {
-    await fetch(`${API}/api/live/session/${sessionId}`, { method: "DELETE" });
-  } catch (e) {}
+function clearSessionUI() {
   sessionId = null;
   transcript = [];
   if (sliceTimer) { clearInterval(sliceTimer); sliceTimer = null; }
@@ -520,6 +568,41 @@ deleteBtn.addEventListener("click", async () => {
   lastObservations = [];
   dismissedObsIds.clear();
   observationsList.replaceChildren();
+}
+
+deleteBtn.addEventListener("click", async () => {
+  if (!sessionId) return;
+  if (!window.confirm(I18N.deleteConfirm)) return;
+  deleteBtn.disabled = true;
+  deleteStatus.textContent = I18N.deleting;
+  try {
+    const r = await loopbackFetch(`${API}/api/live/session/${sessionId}`, { method: "DELETE" });
+    if (!r.ok) {
+      deleteStatus.textContent = I18N.deleteError;
+      return;
+    }
+    let body;
+    try {
+      body = await r.json();
+    } catch (e) {
+      deleteStatus.textContent = I18N.deleteError;
+      return;
+    }
+    if (!body || body.deleted !== true) {
+      deleteStatus.textContent = I18N.deleteError;
+      return;
+    }
+  } catch (e) {
+    if (e instanceof TypeError) markBackendDown();
+    deleteStatus.textContent = lnaErrorMessage(I18N.deleteError);
+    return;
+  } finally {
+    deleteBtn.disabled = false;
+  }
+  // Only now, after the backend confirmed ``deleted: true``, remove the session
+  // from the visible UI and report success.
+  clearSessionUI();
+  deleteStatus.textContent = I18N.deleteSuccess;
 });
 
 // --- Live Meeting (Phase 4a) ---
@@ -560,7 +643,7 @@ function pickMimeType() {
 async function checkConsent() {
   try {
     const r = await withDeadSessionRecovery(() =>
-      fetch(`${API}/api/live/consent/${sessionId}`)
+      loopbackFetch(`${API}/api/live/consent/${sessionId}`)
     );
     if (!r.ok) return false;
     const d = await r.json();
@@ -578,7 +661,7 @@ async function uploadChunk(blob, index) {
   form.append("mode", recordingMode);
   try {
     const r = await withDeadSessionRecovery(() =>
-      fetch(`${API}/api/live/session/${sessionId}/chunk`, { method: "POST", body: form })
+      loopbackFetch(`${API}/api/live/session/${sessionId}/chunk`, { method: "POST", body: form })
     );
     if (r.status === 403) {
       setMeetingStatus("idle", MEET.errConsent);
@@ -601,7 +684,7 @@ async function uploadChunk(blob, index) {
 async function pollTranscript() {
   if (!sessionId) return;
   try {
-    const r = await fetch(`${API}/api/live/session/${sessionId}/transcript/live?since=${lastSeenIndex}`);
+    const r = await loopbackFetch(`${API}/api/live/session/${sessionId}/transcript/live?since=${lastSeenIndex}`);
     if (!r.ok) return;
     const d = await r.json();
     for (const seg of d.transcript || []) {
@@ -716,7 +799,7 @@ async function stopRecording() {
   }
   setMeetingStatus("processing");
   try {
-    if (sessionId) await fetch(`${API}/api/live/session/${sessionId}/stop`, { method: "POST" });
+    if (sessionId) await loopbackFetch(`${API}/api/live/session/${sessionId}/stop`, { method: "POST" });
   } catch (e) {}
   mediaRecorder = null;
   meetingStart.hidden = false;
@@ -773,7 +856,7 @@ function renderObservations(items) {
 async function pollObservations() {
   if (!sessionId) return;
   try {
-    const r = await fetch(`${API}/api/live/session/${sessionId}/observations?since=${obsLastIndex}&document_id=${sessionId}`);
+    const r = await loopbackFetch(`${API}/api/live/session/${sessionId}/observations?since=${obsLastIndex}&document_id=${sessionId}`);
     if (!r.ok) return;
     const d = await r.json();
     if (typeof d.last_index === "number") obsLastIndex = d.last_index;
@@ -789,7 +872,7 @@ async function dismissObservation(obsId) {
   dismissedObsIds.add(obsId);
   renderObservations(lastObservations);
   try {
-    await fetch(`${API}/api/live/session/${sessionId}/observations/${obsId}/dismiss`, { method: "POST" });
+    await loopbackFetch(`${API}/api/live/session/${sessionId}/observations/${obsId}/dismiss`, { method: "POST" });
   } catch (e) {}
 }
 
@@ -808,9 +891,23 @@ const sessionButtons = [
   exportBtn,
 ];
 
-function setBackendDown(down) {
+function setBackendDown(down, errKind) {
   backendUp = !down;
   backendBanner.hidden = !down;
+  const titleEl = backendBanner.querySelector("h2");
+  const textEl = backendBanner.querySelector("p:not(.backend-last-checked)");
+  if (titleEl && textEl) {
+    if (errKind === "lna-needed") {
+      titleEl.textContent = I18N.lnaNeeded;
+      textEl.textContent = I18N.lnaText;
+    } else if (errKind === "lna-denied") {
+      titleEl.textContent = I18N.lnaDenied;
+      textEl.textContent = I18N.lnaDeniedText;
+    } else {
+      titleEl.textContent = I18N.backendTitle;
+      textEl.textContent = I18N.backendText;
+    }
+  }
   for (const b of sessionButtons) {
     b.disabled = down;
     if (down) {
@@ -825,15 +922,55 @@ function setBackendDown(down) {
 }
 
 function markBackendDown() {
-  setBackendDown(true);
+  if (!connectionError) {
+    if (lnaState === "denied") connectionError = "lna-denied";
+    else if (lnaState === "prompt") connectionError = "lna-needed";
+    else connectionError = "refused";
+  }
+  setBackendDown(true, connectionError);
 }
 
-function applyHealth(up) {
+function applyHealth(up, errKind) {
   backendUp = up;
+  connectionError = up ? null : errKind;
   backendLastCheckedTime.textContent = new Date().toLocaleTimeString();
-  setBackendDown(!up);
+  setBackendDown(!up, errKind);
 }
 
 backendRecheck.addEventListener("click", recheck);
 
-checkHealth();
+// --- Initialization: honor Chrome Local Network Access ---
+// Never fire the first loopback request on page load when the permission
+// state is "prompt" — defer it to the explicit Re-check click so the prompt
+// appears in an understandable context. When already "granted", connect
+// automatically (including the health check on load).
+async function initConnection() {
+  const result = await queryLnaPermissionSafe();
+  lnaState = result.state;
+  lnaStatus = result.status;
+  if (lnaStatus) {
+    lnaStatus.addEventListener("change", () => {
+      lnaState = lnaStatus.state;
+      connectionError = null;
+      if (lnaState === "granted") {
+        // Only a granted transition may start a loopback request; a check
+        // already in flight is queued as one pending recheck.
+        checkHealth();
+      } else if (lnaState === "denied") {
+        applyHealth(false, "lna-denied");
+      } else {
+        applyHealth(false, "lna-needed");
+      }
+    });
+  }
+  if (lnaState === "granted") {
+    checkHealth();
+  } else if (lnaState === "denied") {
+    applyHealth(false, "lna-denied");
+  } else {
+    // "prompt" or unknown: show the LNA-needed banner, wait for Re-check.
+    applyHealth(false, "lna-needed");
+  }
+}
+
+initConnection();

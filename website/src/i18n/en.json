@@ -96,10 +96,17 @@
     "export": "Export findings (PDF)",
     "delete": "Delete session",
     "deleteConfirm": "Delete this session and all its data?",
-    "localNote": "Live Analysis talks to your locally running Niyosh app at localhost:8002.",
+    "deleting": "Deleting…",
+    "deleteSuccess": "Session deleted.",
+    "deleteError": "Could not delete the session — it is still available. Check the app and try again.",
+    "localNote": "Live Analysis talks to your locally running Niyosh app at 127.0.0.1:8002.",
     "backend": {
       "title": "Local app required",
       "text": "This is the control panel of the Niyosh local app. Audio, documents, and transcripts never leave this machine — that is why the local app is required.",
+      "lnaNeeded": "Browser loopback access required",
+      "lnaText": "Chrome needs your permission to connect to the local Niyosh app at 127.0.0.1:8002. Click “Re-check connection” to grant access.",
+      "lnaDenied": "Loopback access blocked",
+      "lnaDeniedText": "Chrome has blocked access to the local Niyosh app. Click the padlock icon → Site settings → Local network access → set to “Allow”, then click “Re-check connection”.",
       "docsLink": "Run the local app",
       "lastChecked": "Last checked:",
       "recheck": "Re-check connection",
@@ -109,7 +116,11 @@
       "upload": "Upload failed.",
       "analyze": "Analysis failed.",
       "generic": "Something went wrong.",
-      "sessionCreate": "Couldn't create a recording session — make sure the app is running, then try again."
+      "sessionCreate": "Couldn't create a recording session — make sure the app is running, then try again.",
+      "connectionRefused": "Connection refused — the local app is not running.",
+      "lnaDenied": "Loopback access denied by the browser.",
+      "lnaNeeded": "Loopback access required — click “Re-check connection”.",
+      "corsBlocked": "Cross-origin request blocked (CORS)."
     },
     "consent": {
       "sectionTitle": "Session setup",
@@ -138,7 +149,7 @@
       "sectionTitle": "Audio",
       "modeLabel": "Recording mode",
       "modeDictation": "Dictation-only (my voice)",
-      "modeDictationHint": "Always available. No consent required.",
+      "modeDictationHint": "Always available. No in-app consent step required.",
       "modeFull": "Full meeting (consent required)",
       "modeFullHint": "Requires recorded consent for this session.",
       "fileLabel": "Transcribe audio file (WAV, MP3, or M4A)",
@@ -160,7 +171,7 @@
         "full": "Full meeting (all voices — consent required)",
         "fullHint": "Captures all speakers. Requires recorded consent for this session.",
         "dictation": "Dictation only (my voice — always available)",
-        "dictationHint": "Captures only your voice. Always available, no consent required."
+        "dictationHint": "Captures only your voice. No in-app consent step required — you remain responsible for verifying recording laws."
       },
       "start": "Start recording",
       "stop": "Stop recording",
