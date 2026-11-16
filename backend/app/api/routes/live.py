@@ -1,3 +1,4 @@
+import logging
 import uuid
 from datetime import datetime, timezone
 from io import BytesIO
@@ -43,6 +44,8 @@ from app.services import (
 )
 
 router = APIRouter(prefix="/api/live", tags=["live"])
+
+logger = logging.getLogger(__name__)
 
 
 def _esc(text: str) -> str:
@@ -119,6 +122,10 @@ def upload(file: UploadFile = File(...)) -> UploadResponse:
         ingest.ingest(doc_id, filename, content)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
+    except RuntimeError as exc:
+        # Surface model/provisioning failures as a clear, actionable error
+        # instead of an opaque 500 (e.g. embedding model not provisioned locally).
+        raise HTTPException(status_code=503, detail=str(exc))
     session_store.create_session(doc_id, filename)
     return UploadResponse(document_id=doc_id, session_id=doc_id)
 
@@ -139,7 +146,13 @@ def analyze(req: AnalyzeRequest) -> AnalyzeResponse:
         req.document_id, req.discussion_point, req.transcript_excerpt
     )
     finding = Finding(**finding_data)
-    stored = {**finding.model_dump(), "source": finding_data.get("source", mode)}
+    usage = finding_data.get("usage")
+    stored = {
+        **finding.model_dump(),
+        "source": finding_data.get("source", mode),
+        "model": (usage or {}).get("model") if usage else None,
+        "usage": usage,
+    }
     session_store.add_finding(session["session_id"], stored)
     return AnalyzeResponse(**finding.model_dump(), mode=mode)
 
@@ -420,7 +433,16 @@ def export(session_id: str) -> Response:
 
 @router.delete("/session/{session_id}")
 def delete(session_id: str) -> dict:
-    if session_store.load_session(session_id) is None:
+    if not session_store.valid_session_id(session_id):
+        raise HTTPException(status_code=400, detail="Invalid session id")
+    try:
+        removed = session_store.delete_session(session_id)
+    except Exception as exc:  # noqa: BLE001 — cleanup failure must surface
+        logger.exception("session deletion incomplete for %r", session_id)
+        raise HTTPException(
+            status_code=500,
+            detail="Deletion incomplete; retry the request. No success was reported.",
+        ) from exc
+    if not removed:
         raise HTTPException(status_code=404, detail="Unknown session")
-    session_store.delete_session(session_id)
     return {"deleted": True, "session_id": session_id}

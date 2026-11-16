@@ -28,6 +28,10 @@ class Finding(BaseModel):
     evidence_status: EvidenceStatus
     suggested_question: Optional[str] = None
     draft_label: str = "draft — review required"
+    # How the finding was produced: a grounded model answer or the
+    # retrieval-only fallback. Exposed so clients can distinguish a genuine
+    # "insufficient evidence" result from a degraded processing run.
+    source: Literal["llm_grounded", "retrieval_only"] = "llm_grounded"
 
 
 class AnalyzeResponse(Finding):

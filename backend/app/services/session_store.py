@@ -1,9 +1,12 @@
 import json
+import re
+import shutil
 import threading
 from datetime import datetime, timezone
 from pathlib import Path
 
 from app.core.config import settings
+from app.services import consent_store, observation_store
 from app.services.chroma_store import delete as delete_collection
 
 # Serializes the session JSON read-modify-write cycles performed across the
@@ -11,6 +14,16 @@ from app.services.chroma_store import delete as delete_collection
 # does NOT enable concurrent model execution (models remain serialized by
 # live_worker.model_lock).
 _lock = threading.RLock()
+
+# Session IDs are server-generated uuid4().hex (32 lowercase hex). We also
+# accept simple alphanumeric test identifiers, but reject anything that could
+# traverse outside DATA_DIR (path separators, dot segments, drive prefixes).
+_SAFE_SESSION_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$")
+
+
+def valid_session_id(session_id: str) -> bool:
+    """Return True when ``session_id`` is safe to use as a path component."""
+    return isinstance(session_id, str) and bool(_SAFE_SESSION_ID.match(session_id))
 
 
 def _sessions_dir() -> Path:
@@ -102,11 +115,61 @@ def set_capture_disabled(session_id: str, disabled: bool) -> None:
         _path(session_id).write_text(json.dumps(data), encoding="utf-8")
 
 
-def delete_session(session_id: str) -> None:
+def _remove_audio(session_id: str) -> bool:
+    """Remove the session's audio-chunk directory (idempotent)."""
+    audio_dir = settings.DATA_DIR / "audio" / session_id
+    if audio_dir.exists():
+        shutil.rmtree(audio_dir)
+        return True
+    return False
+
+
+def _remove_session_record(session_id: str) -> bool:
+    """Remove the session JSON record (idempotent)."""
     p = _path(session_id)
     if p.exists():
         p.unlink()
-    try:
-        delete_collection(session_id)
-    except Exception:
-        pass
+        return True
+    return False
+
+
+def delete_session(session_id: str) -> bool:
+    """Delete a session and every associated artifact.
+
+    Removes, in order: audio chunks, observations, session-specific consent
+    records, the Chroma vector collection, and finally the session JSON. The
+    session JSON is deleted **last** so an intermediate failure leaves a
+    retryable session record rather than stranding orphan artifacts.
+
+    Every step is idempotent, so a second request finishes a partially
+    completed deletion, and orphan cleanup still runs when the session JSON is
+    already absent. Returns True when any artifact was removed; raises
+    ``ValueError`` for an unsafe ``session_id`` and propagates storage/database
+    errors so callers never report success on incomplete cleanup.
+    """
+    if not valid_session_id(session_id):
+        raise ValueError(f"invalid session id: {session_id!r}")
+
+    removed = False
+
+    # Audio chunks (recursive directory removal).
+    if _remove_audio(session_id):
+        removed = True
+
+    # Observations.
+    if observation_store.delete_observations(session_id):
+        removed = True
+
+    # Session-specific consent records (preserves other sessions' records).
+    if consent_store.clear_consents(session_id):
+        removed = True
+
+    # Vector collection (missing collection == already deleted).
+    if delete_collection(session_id):
+        removed = True
+
+    # Session JSON last: keep the retryable marker until everything else is gone.
+    if _remove_session_record(session_id):
+        removed = True
+
+    return removed

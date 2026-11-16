@@ -5,7 +5,7 @@
 - FastAPI (Python 3.12) — API layer.
 - Ollama — local LLM inference (Llama 3).
 - ChromaDB + sentence-transformers — retrieval (embeddings + vector search).
-- faster-whisper (optional) — local, CPU speech-to-text for audio capture.
+- faster-whisper — local, CPU speech-to-text for audio capture.
 - Docker Compose — two services (`app` + `ollama`) and one named `data` volume.
 - Astro — static bilingual (EN/DE) site.
 - pytest + GitHub Actions — CI.
@@ -33,7 +33,7 @@
 - `app/services/live_worker.py` — background live-transcription worker (see below).
 - `app/services/observation_store.py` — per-session JSON observation store (`data/observations/<session_id>.json`): add / get / dismiss (dismiss marks `dismissed=true`, never deletes).
 - `app/services/observer.py` — `check_recent_transcript(session_id, since_index, document_id)`: reads only new transcript entries (`chunk_index > since_index`), caps the excerpt at ~2000 chars, runs retrieval (K=3), and returns at most one retrieval-based observation (no LLM call).
-- `app/services/diarization.py` — speaker diarization: one SpeechBrain ECAPA-TDNN embedding per stored audio chunk, clustered with scikit-learn `AgglomerativeClustering` (cosine affinity, `distance_threshold` for 2-6 speakers, or a user-specified speaker count), then mapped to "Speaker N" labels in order of first appearance. Gracefully errors if `speechbrain`/`scikit-learn` are missing, if fewer than 2 chunks exist, or if the model cannot be downloaded.
+- `app/services/diarization.py` — speaker diarization: one SpeechBrain ECAPA-TDNN embedding per stored audio chunk, clustered with scikit-learn `AgglomerativeClustering` (cosine affinity, `distance_threshold` for 2-6 speakers, or a user-specified speaker count), then mapped to "Speaker N" labels in order of first appearance. Gracefully errors if `speechbrain`/`scikit-learn` are missing, if fewer than 2 chunks exist, or if the pretrained model is not cached locally (Niyosh never downloads model weights automatically).
 - `app/services/tts.py` — local text-to-speech with Piper (CPU, offline). A lazy singleton loads one voice model per language (EN: `en_US-lessac-medium`, DE: `de_DE-thorsten-medium`) from `models/piper/` and reuses it. `speak(text, lang)` returns WAV bytes; unsupported languages fall back to EN, input is truncated at ~500 chars, and a clear error is raised if `piper-tts` or the voice model is missing.
 
 ## Live transcription worker (Phase 4a)

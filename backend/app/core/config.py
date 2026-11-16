@@ -1,7 +1,12 @@
 import os
 from pathlib import Path
 
-os.environ.setdefault("ANONYMIZED_TELEMETRY", "False")
+# ChromaDB anonymized telemetry must be disabled before Chroma is initialized.
+# Use an explicit assignment (not ``setdefault``) so a pre-existing value in the
+# environment cannot silently re-enable telemetry.
+os.environ["ANONYMIZED_TELEMETRY"] = "False"
+
+_REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
 class Settings:
@@ -12,8 +17,18 @@ class Settings:
     MODEL_NAME = "llama3"
     EMBEDDING_MODEL = "all-MiniLM-L6-v2"
 
+    # Local model cache, provisioned once by ``scripts/download_models.py``.
+    # The runtime loads models from these exact directories and never triggers a
+    # download on demand (see transcription.py / embedding.py offline controls).
+    MODELS_DIR = Path(os.getenv("NIYOSH_MODELS_DIR", str(_REPO_ROOT / "models")))
+    WHISPER_MODEL_DIR = Path(
+        os.getenv("WHISPER_MODEL_DIR", str(MODELS_DIR / "faster-whisper-small"))
+    )
+    EMBEDDING_MODEL_DIR = Path(
+        os.getenv("EMBEDDING_MODEL_DIR", str(MODELS_DIR / "all-MiniLM-L6-v2"))
+    )
+
     OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-    CHROMA_DATA_DIR = Path(os.getenv("CHROMA_DATA_DIR", "chroma_data"))
 
     DATA_DIR = Path(os.getenv("DATA_DIR", "data"))
     TOP_K = 3
@@ -29,6 +44,12 @@ class Settings:
         "plaintiff, defendant, hearing, deposition, arbitration, breach, damages, "
         "notice, dispute, evidence, testimony, appeal, statute, compliance",
     )
+
+    # Local LLM (Ollama) generation controls.
+    LLM_TEMPERATURE = float(os.getenv("LLM_TEMPERATURE", "0.0"))
+    LLM_MAX_TOKENS = int(os.getenv("LLM_MAX_TOKENS", "512"))
+    LLM_TIMEOUT = int(os.getenv("LLM_TIMEOUT", "120"))
+    LLM_MAX_RETRIES = int(os.getenv("LLM_MAX_RETRIES", "2"))
 
 
 settings = Settings()

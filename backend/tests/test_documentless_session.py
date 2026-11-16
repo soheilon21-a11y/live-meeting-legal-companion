@@ -87,7 +87,8 @@ def test_upload_document_to_same_session_afterwards_succeeds(monkeypatch):
             ' "passage_position": "passage 1 of 1",'
             ' "issue_question": "Does the agreement state a commencement date?",'
             ' "evidence_status": "supported",'
-            ' "suggested_question": "Please confirm the commencement date."}'
+            ' "suggested_question": "Please confirm the commencement date."}',
+            None,
         )
 
     monkeypatch.setattr(analysis, "_call_llm", fake_llm)

@@ -146,3 +146,15 @@ def test_diarize_engine_unavailable(monkeypatch):
     resp = client.post("/api/live/session/d4/diarize")
     assert resp.status_code == 503
     assert "install speechbrain and scikit-learn" in resp.json()["detail"]
+
+
+def test_diarize_model_not_cached_gives_clear_error(monkeypatch):
+    # speechbrain is importable, but the pretrained model is not cached. The
+    # service must report a clear error and must NOT attempt a silent download.
+    diarization._model = None
+    _make_session("d5")
+    _write_chunk("d5", 0)
+    _write_chunk("d5", 1)
+    resp = client.post("/api/live/session/d5/diarize")
+    assert resp.status_code == 503
+    assert "not cached locally" in resp.json()["detail"]
