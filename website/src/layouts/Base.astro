@@ -13,7 +13,9 @@ const csp = [
   "font-src 'self'",
   "base-uri 'none'",
   "form-action 'none'",
-  "frame-ancestors 'none'",
+  // NOTE: "frame-ancestors" is intentionally omitted here. Browsers ignore it
+  // when delivered via a <meta> element, and GitHub Pages cannot set the HTTP
+  // header that would make it effective. See docs/SECURITY.md (CSP).
   csp_extra,
 ].filter(Boolean).join('; ');
 const base = import.meta.env.BASE_URL;

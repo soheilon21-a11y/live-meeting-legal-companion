@@ -31,7 +31,8 @@ def test_upload_and_analyze_returns_verbatim_passage(monkeypatch):
             ' "passage_position": "passage 1 of 1",'
             ' "issue_question": "Does the agreement state a commencement date?",'
             ' "evidence_status": "supported",'
-            ' "suggested_question": "Please confirm the commencement date."}'
+            ' "suggested_question": "Please confirm the commencement date."}',
+            None,
         )
 
     monkeypatch.setattr(analysis, "_call_llm", fake_llm)
@@ -60,7 +61,8 @@ def test_insufficient_irrelevant_point(monkeypatch):
             ' "passage_position": "",'
             ' "issue_question": "No relevant passage found for this discussion point.",'
             ' "evidence_status": "insufficient",'
-            ' "suggested_question": ""}'
+            ' "suggested_question": ""}',
+            None,
         )
 
     monkeypatch.setattr(analysis, "_call_llm", fake_llm)
@@ -73,6 +75,7 @@ def test_insufficient_irrelevant_point(monkeypatch):
     finding = resp.json()
     assert finding["evidence_status"] == "insufficient"
     assert finding["verbatim_passage"] == ""
+    assert finding["source"] == "llm_grounded"
 
 
 def test_retrieval_only_fallback(monkeypatch):
@@ -88,14 +91,22 @@ def test_retrieval_only_fallback(monkeypatch):
     )
     finding = resp.json()
     assert finding["mode"] == "retrieval_only"
+    assert finding["source"] == "retrieval_only"
     assert finding["evidence_status"] == "insufficient"
+    assert finding["issue_question"] == ""
     assert finding["verbatim_passage"]
     assert finding["verbatim_passage"] in FIXTURE
+
+    # The degraded mode must survive the session reload used by the UI; without
+    # it a retrieval-only result is indistinguishable from a real
+    # insufficient-evidence answer.
+    stored = client.get(f"/api/live/session/{doc_id}/findings").json()["findings"]
+    assert stored[0]["source"] == "retrieval_only"
 
 
 def test_empty_parse_falls_back_to_retrieval(monkeypatch):
     def fake_llm(prompt):
-        return '{"verbatim_passage": "", "issue_question": "", "evidence_status": "insufficient"}'
+        return ('{"verbatim_passage": "", "issue_question": "", "evidence_status": "insufficient"}', None)
 
     monkeypatch.setattr(analysis, "_call_llm", fake_llm)
 
@@ -113,7 +124,7 @@ def test_empty_parse_falls_back_to_retrieval(monkeypatch):
 
 def test_degenerate_output_does_not_log_content(monkeypatch, caplog):
     def fake_llm(prompt):
-        return "unparsable: The agreement shall commence on 1 January 2026"
+        return ("unparsable: The agreement shall commence on 1 January 2026", None)
 
     monkeypatch.setattr(analysis, "_call_llm", fake_llm)
 
@@ -124,7 +135,7 @@ def test_degenerate_output_does_not_log_content(monkeypatch, caplog):
             json={"document_id": doc_id, "discussion_point": "When does the agreement commence?"},
         )
 
-    assert "degenerate" in caplog.text
+    assert "rejected" in caplog.text
     assert "commence on 1 January 2026" not in caplog.text
 
 
@@ -135,7 +146,8 @@ def test_short_valid_finding_not_downgraded(monkeypatch):
             ' "passage_position": "",'
             ' "issue_question": "Does the contract address termination?",'
             ' "evidence_status": "insufficient",'
-            ' "suggested_question": ""}'
+            ' "suggested_question": ""}',
+            None,
         )
 
     monkeypatch.setattr(analysis, "_call_llm", fake_llm)
@@ -158,7 +170,8 @@ def test_export_returns_pdf(monkeypatch):
             ' "passage_position": "passage 1 of 1",'
             ' "issue_question": "Does the agreement state a commencement date?",'
             ' "evidence_status": "supported",'
-            ' "suggested_question": "Please confirm the commencement date."}'
+            ' "suggested_question": "Please confirm the commencement date."}',
+            None,
         )
 
     monkeypatch.setattr(analysis, "_call_llm", fake_llm)

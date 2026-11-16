@@ -143,6 +143,26 @@ function badge(s) {
   return el("span", "badge " + cls, label);
 }
 
+function findingMode(f) {
+  return f.mode || f.source || "";
+}
+
+// A genuine insufficient-evidence answer and a degraded processing run both use
+// the "insufficient" badge. This notice is what tells the user which one they are
+// looking at; the retrieval-only fallback never fabricates an issue question.
+function findingNotice(f) {
+  if (findingMode(f) === "retrieval_only") {
+    return f.verbatim_passage ? I18N.findingRetrievalOnlyNotice : I18N.findingNoEvidenceNotice;
+  }
+  if (f.evidence_status === "insufficient") return I18N.findingInsufficientNotice;
+  return "";
+}
+
+function findingSourceShort(f) {
+  if (findingMode(f) !== "retrieval_only") return "";
+  return f.verbatim_passage ? I18N.findingRetrievalOnlyShort : I18N.findingNoEvidenceShort;
+}
+
 function renderFinding(f) {
   resultEl.replaceChildren();
   const card = el("section", "finding-card");
@@ -156,6 +176,8 @@ function renderFinding(f) {
   }
   card.appendChild(el("p", "finding-label", I18N.evidenceLabel));
   card.appendChild(badge(f.evidence_status));
+  const notice = findingNotice(f);
+  if (notice) card.appendChild(el("p", "live-hint finding-notice", notice));
   if (f.suggested_question) {
     card.appendChild(el("p", "finding-label", I18N.suggestedLabel));
     card.appendChild(el("p", "finding-suggested", f.suggested_question));
@@ -178,6 +200,8 @@ function renderFindings(items) {
     const li = el("li", "finding-item");
     li.appendChild(el("span", "finding-item-issue", f.issue_question || "—"));
     li.appendChild(badge(f.evidence_status));
+    const source = findingSourceShort(f);
+    if (source) li.appendChild(el("span", "live-hint finding-item-source", source));
     const speakBtn = el("button", "live-tts-button", I18N.ttsButton);
     speakBtn.type = "button";
     speakBtn.addEventListener("click", () => speakAloud(findingSpeechText(f)));

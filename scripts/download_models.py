@@ -17,6 +17,7 @@ ROOT_DIR = SCRIPT_DIR.parent
 MODELS_DIR = ROOT_DIR / "models"
 
 WHISPER_REPO = "Systran/faster-whisper-small"
+EMBEDDING_REPO = "sentence-transformers/all-MiniLM-L6-v2"
 PIPER_VOICES = {
     "English": "en_US-lessac-medium",
     "German": "de_DE-thorsten-medium",
@@ -78,8 +79,24 @@ def download_whisper() -> None:
         fail("faster-whisper-small", exc)
 
 
+def download_embeddings() -> None:
+    section("2/4  sentence-transformers 'all-MiniLM-L6-v2' (embedding)")
+    target = MODELS_DIR / "all-MiniLM-L6-v2"
+    target.mkdir(parents=True, exist_ok=True)
+    try:
+        from huggingface_hub import snapshot_download
+
+        print(f"  Repo:   {EMBEDDING_REPO}")
+        print(f"  Target: {target}")
+        path = snapshot_download(repo_id=EMBEDDING_REPO, local_dir=str(target))
+        print(f"  Cached: {path}")
+        ok(f"all-MiniLM-L6-v2  ->  {path}")
+    except Exception as exc:
+        fail("all-MiniLM-L6-v2", exc)
+
+
 def download_silero() -> None:
-    section("2/3  Silero VAD (voice activity detection)")
+    section("3/4  Silero VAD (voice activity detection)")
     try:
         import torch
 
@@ -103,7 +120,7 @@ def download_silero() -> None:
 
 
 def download_piper() -> None:
-    section("3/3  Piper TTS voices (text-to-speech)")
+    section("4/4  Piper TTS voices (text-to-speech)")
     piper_dir = MODELS_DIR / "piper"
     try:
         import piper  # noqa: F401
@@ -165,6 +182,7 @@ def summarize() -> None:
 def main() -> None:
     MODELS_DIR.mkdir(parents=True, exist_ok=True)
     download_whisper()
+    download_embeddings()
     download_silero()
     download_piper()
     summarize()

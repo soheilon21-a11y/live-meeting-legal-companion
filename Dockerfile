@@ -11,7 +11,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY backend/ .
 
 RUN useradd --create-home --uid 1000 appuser \
-    && mkdir -p /app/chroma_data \
+    && mkdir -p /app/data \
     && chown -R appuser:appuser /app
 
 USER appuser

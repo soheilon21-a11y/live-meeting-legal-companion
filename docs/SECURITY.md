@@ -14,12 +14,12 @@ No external requests are made at runtime. No telemetry, no analytics, no cloud s
 
 ## Data storage
 
-- Chroma data: one collection per session under `backend/data/chroma/` (named volume `data` at `/app/data` in Docker).
+- Chroma data: one collection per session under `backend/data/chroma/` (named volume `data` at `/app/data` in Docker). The canonical location is always `DATA_DIR/chroma`; there is no separate `CHROMA_DATA_DIR` setting.
 - Session metadata, findings, and transcript: JSON files under `backend/data/sessions/<session_id>.json`.
 - Consent log: `backend/data/consent.jsonl` (append-only JSONL, see below).
 - The website stores nothing: no cookies, no trackers, no browser storage. The only client-side state is the in-memory session ID on the Live page, which is lost on reload.
 
-`backend/data/` is gitignored and never committed.
+`backend/data/` is gitignored and never committed. All data paths resolve under the single `DATA_DIR` root (default `backend/data`, overridable via the `DATA_DIR` environment variable).
 
 ## Session data retention
 
@@ -38,6 +38,8 @@ Consent is recorded in an **append-only JSONL log** at `backend/data/consent.jso
 - **Append-only, tamper-evident by design:** each consent event is appended as a single JSON line. There is no edit or delete of past entries.
 - **Owner-only permissions:** the file is set to `0600` (owner read/write) whenever it is created or written.
 - **Deletion (GDPR Art. 17):** `clear_consents(session_id)` removes only that session's lines. This is a deliberate, narrow exception to append-only behaviour to satisfy the right to erasure.
+- **Crash-safe rewrite:** `clear_consents` writes the full replacement to a sibling temp file, flushes it, and atomically replaces the live file with `os.replace`, so an interruption cannot leave a truncated consent log. Unrelated and malformed lines are preserved.
+- The lock serializing consent read-modify-write cycles is **process-local only**; Niyosh runs a single Uvicorn worker and does not claim cross-process safety.
 - The consent log is tamper-evident by design, **not a certified legal record.**
 
 ## Consent gate (hard technical gate)
@@ -46,7 +48,7 @@ Full-meeting audio capture is refused **in code** unless a consent record with `
 
 ## Dictation-only mode (default)
 
-Dictation-only mode captures only the lawyer's own voice, so no consent from other speakers is required. It is always available in any jurisdiction and is the default; full-meeting capture is opt-in per session.
+Dictation-only mode captures only the lawyer's own voice and has no in-app recorded-consent step. This is not a legal exemption: the user remains responsible for verifying applicable recording, privacy, data-protection and workplace-communication laws before recording. Full-meeting capture is opt-in per session and is refused in code without recorded consent.
 
 ## Country check (informational)
 
@@ -64,12 +66,17 @@ Niyosh does **not** claim SOC 2, ISO 27001, or any other certification. The loca
 
 ### In the app
 
-The Live page "Delete session" button calls `DELETE /api/live/session/{session_id}`. This:
+The Live page "Delete session" button calls `DELETE /api/live/session/{session_id}`. This removes every session-specific artifact in order:
 
-1. Removes the ChromaDB collection `chroma_<session_id>` (the text chunks and embeddings).
-2. Removes `backend/data/sessions/<session_id>.json` (findings and metadata).
+1. `backend/data/audio/<session_id>/` (raw audio chunks).
+2. `backend/data/observations/<session_id>.json` (observations).
+3. The session's lines in `backend/data/consent.jsonl` (via `clear_consents`).
+4. The ChromaDB collection `chroma_<session_id>` (text chunks and embeddings).
+5. `backend/data/sessions/<session_id>.json` (findings and metadata) — **deleted last** so a mid-deletion failure leaves a retryable session record.
 
 Deletion is immediate and irreversible. No tombstone, no soft delete, no background copy.
+
+**Failure and retry semantics:** if any cleanup step fails, the request returns `500` (never `{"deleted": true}`) and the remaining artifacts — including the session JSON — are left in place so a retry can finish. Repeating the request is idempotent; if the session JSON is already gone but orphan artifacts remain, the endpoint still cleans them up (a valid, safe session ID is never blocked by an early 404). Ordinary filesystem deletion is **not** secure erasure of the underlying storage.
 
 ### From the filesystem
 
@@ -89,4 +96,8 @@ Minimal: single-user, local, no network surface.
 - The API publishes port 8002 bound to `127.0.0.1` (localhost only).
 - There is no multi-tenancy and no remote client trust boundary. CORS is restricted to `localhost`/`127.0.0.1` origins only.
 - The main risk is local: someone with filesystem access already has the machine.
-- The website is fully static and enforces a strict Content-Security-Policy. All pages use `script-src 'none'`; only the Live page enables a local script (`script-src 'self'`) and allows requests to `http://localhost:8002`.
+- The website is fully static and enforces a strict Content-Security-Policy. All pages use `script-src 'none'`; only the Live page enables a local script (`script-src 'self'`) and allows requests to the local backend (`connect-src` permits both `http://localhost:8002` and `http://127.0.0.1:8002`; the frontend calls `127.0.0.1:8002` to match the backend's loopback bind).
+
+## Content-Security-Policy and frame-ancestors
+
+The CSP is delivered via a `<meta http-equiv="Content-Security-Policy">` element. Browsers **ignore** the `frame-ancestors` directive when it is delivered via a meta element, so Niyosh does not ship a `frame-ancestors` directive there (it would be misleading). Effective anti-framing (`frame-ancestors 'none'` or `X-Frame-Options`) requires an HTTP response header, which GitHub Pages cannot set. Until Niyosh is served from a host that can set response headers, there is no header-based clickjacking protection; all other CSP restrictions (`script-src`, `connect-src`, `media-src`, `default-src 'none'`, etc.) remain effective via the meta policy.

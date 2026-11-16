@@ -19,7 +19,7 @@ A local, privacy-first meeting companion for legal professionals. Niyosh retriev
 
 Audio capture is available in two modes:
 
-- **Dictation-only (default, always available).** Captures only the lawyer's own voice — no consent from other speakers needed, in any jurisdiction.
+- **Dictation-only (default, always available).** Captures only the lawyer's own voice — no in-app consent step required. This does not replace the user's duty to verify applicable recording and privacy laws before recording.
 - **Full-meeting capture (opt-in per session).** Captures all speakers. Requires a **Country Check** (informational recording-rules summary) and **recorded collective consent** for that session. Without recorded consent the backend refuses audio capture in code.
 
 > The country check is **informational only — not legal advice.** The user is responsible for verifying local recording laws (e.g. § 201 StGB in Germany) before using audio capture. See `docs/SCOPE.md` and `docs/SECURITY.md`.
@@ -28,14 +28,14 @@ Audio capture is available in two modes:
 
 Record the meeting from the Live page and watch a live transcript appear — with a 30-90 second delay (this is normal; transcription is near-real-time, not streaming). Two modes:
 
-- **Dictation only (my voice — always available).** No consent required.
+- **Dictation only (my voice — always available).** No in-app consent step required.
 - **Full meeting (all voices — consent required).** The backend refuses capture (`403`) without recorded consent for the session.
 
 Audio is captured in 15-second chunks, saved to disk first, then transcribed sequentially by a single background worker. Raw audio is never deleted automatically — you decide via the existing delete-session action.
 
 ## Standalone audio transcription
 
-In the Audio section, upload a WAV, MP3, or M4A file to add its transcript to the current session. Transcription runs locally using the same `faster-whisper` engine as live audio transcription; like live transcription, it requires the **optional** `faster-whisper` install (see "Optional: enable transcription" below), and without it the endpoint returns a clear error.
+In the Audio section, upload a WAV, MP3, or M4A file to add its transcript to the current session. Transcription runs locally using the same `faster-whisper` engine as live audio transcription (included in `requirements.txt`).
 
 ## Speaker attribution (Phase 4c)
 
@@ -56,22 +56,16 @@ TTS audio is streamed directly and **not persisted** — if you want to save the
 - FastAPI + Uvicorn (API)
 - Ollama (Llama 3, local inference)
 - ChromaDB + sentence-transformers (RAG)
-- faster-whisper (optional, local CPU speech-to-text)
+- faster-whisper (local CPU speech-to-text)
 - SpeechBrain ECAPA-TDNN + scikit-learn (optional, local CPU speaker diarization)
 - Piper TTS (optional, local CPU text-to-speech, EN + DE)
 - Docker Compose
 - pytest + GitHub Actions (CI)
 - Astro static site (EN/DE)
 
-## Optional: enable transcription
+## Transcription model
 
-Transcription uses [faster-whisper](https://github.com/SYSTRAN/faster-whisper), which is **not** included in `requirements.txt` (heavy — it downloads a model on first run). Install it separately:
-
-```bash
-pip install faster-whisper
-```
-
-Without it, transcription endpoints return a clear error: "Transcription engine not available — install faster-whisper". The model size is configurable via the `LIVE_WHISPER_MODEL` env var (default `small`).
+Transcription uses [faster-whisper](https://github.com/SYSTRAN/faster-whisper), included in `requirements.txt`. The model weights are cached once by running `python scripts/download_models.py` (with internet); afterwards transcription works fully offline. The model size is configurable via the `LIVE_WHISPER_MODEL` env var (default `small`).
 
 ## Optional: enable text-to-speech (Phase 5a)
 

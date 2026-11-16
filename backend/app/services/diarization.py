@@ -25,14 +25,22 @@ def _load_model():
         from speechbrain.inference.speaker import EncoderClassifier
     except ImportError:
         raise DiarizationError(ENGINE_MISSING)
+    savedir = settings.DATA_DIR / "models" / "ecapa"
+    # Never download silently: the pretrained model must already be cached.
+    if not savedir.exists() or not any(savedir.iterdir()):
+        raise DiarizationError(
+            f"Speaker model '{MODEL_NAME}' is not cached locally. "
+            f"Download it once (with internet) into '{savedir}', then retry. "
+            "Niyosh never downloads models automatically."
+        )
     try:
         _model = EncoderClassifier.from_hparams(
-            source=MODEL_NAME,
-            savedir=str(settings.DATA_DIR / "models" / "ecapa"),
+            source=str(savedir),
+            savedir=str(savedir),
         )
     except Exception as exc:
         raise DiarizationError(
-            f"Could not download speaker model '{MODEL_NAME}' — check network access"
+            f"Could not load speaker model from '{savedir}': {exc}"
         ) from exc
     return _model
 

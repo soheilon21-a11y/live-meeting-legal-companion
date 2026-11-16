@@ -85,7 +85,12 @@
         "supported": "gestützt",
         "conflicting": "widersprüchlich",
         "insufficient": "unzureichend"
-      }
+      },
+      "insufficientNotice": "Unzureichende Beleglage: Das Modell hat die abgerufenen Passagen geprüft und keine gefunden, die diesen Diskussionspunkt stützt. Das ist ein gültiges Ergebnis und kein Verarbeitungsfehler.",
+      "retrievalOnlyNotice": "Verarbeitungshinweis: Das lokale Modell hat keine verwertbare Antwort geliefert, daher wurde keine Fragestellung erzeugt. Die unten zitierte Passage stammt nur aus dem Abruf. Wiederholen Sie die Analyse, sobald das lokale Modell verfügbar ist.",
+      "noEvidenceNotice": "Verarbeitungshinweis: Für diesen Diskussionspunkt wurde keine indexierte Passage abgerufen. Das ist kein Ergebnis „unzureichende Beleglage“ — laden Sie das Dokument erneut hoch oder wiederholen Sie die Analyse.",
+      "retrievalOnlyShort": "nur Abruf — Modell nicht verfügbar",
+      "noEvidenceShort": "keine indexierte Passage — erneut versuchen"
     },
     "draftLabel": "Entwurf — prüfpflichtig",
     "disclaimer": "Entwurf — prüfpflichtig. Keine Rechtsberatung.",

@@ -4,6 +4,11 @@ from io import BytesIO
 from app.core.config import settings
 
 ENGINE_MISSING = "Transcription engine not available — install faster-whisper"
+MODEL_MISSING = (
+    "Whisper model is not provisioned locally. Run scripts/download_models.py "
+    "once (with internet) to cache it, then retry. Niyosh never downloads "
+    "models automatically."
+)
 
 _model = None
 
@@ -19,17 +24,43 @@ class _FakeASR:  # test-only: fixed silent segment, no model download
         return iter([_Seg()]), _Info()
 
 
+def _fake_asr_enabled() -> bool:
+    """Return True only for an explicit test-only opt-in.
+
+    A nonempty string such as ``"0"`` is truthy in Python, so a bare
+    ``if os.getenv(...)`` would wrongly activate Fake-ASR. Only an explicit
+    positive value enables it; the real application launcher fails closed
+    before this code can even run when the variable is present.
+    """
+    return os.environ.get("NIYOSH_E2E_FAKE_ASR", "").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+
+
 def _load_model():
     global _model
     if _model is not None:
         return _model
-    if os.getenv("NIYOSH_E2E_FAKE_ASR"):
+    if _fake_asr_enabled():
         return _FakeASR()  # test-only: no model download
     try:
         from faster_whisper import WhisperModel
     except ImportError:
         raise RuntimeError(ENGINE_MISSING)
-    _model = WhisperModel(settings.LIVE_WHISPER_MODEL, device="cpu", compute_type="int8")
+    model_dir = settings.WHISPER_MODEL_DIR
+    if not model_dir.is_dir() or not (model_dir / "model.bin").exists():
+        raise RuntimeError(MODEL_MISSING)
+    # Load from the provisioned local directory with local_files_only=True so an
+    # upload can never silently initiate a model download.
+    _model = WhisperModel(
+        str(model_dir),
+        device="cpu",
+        compute_type="int8",
+        local_files_only=True,
+    )
     return _model
 
 

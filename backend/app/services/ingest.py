@@ -34,10 +34,18 @@ def chunk_text(text: str, size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP) 
     n = len(text)
     while start < n:
         end = min(start + size, n)
-        chunks.append(text[start:end])
+        chunk = text[start:end].strip()
+        if chunk:
+            chunks.append(chunk)
         if end >= n:
             break
         start = end - overlap
+        # The overlap window can begin inside a word. Move forward to the next
+        # word boundary so a quoted chunk never starts mid-word (the skipped
+        # prefix is already covered by the previous chunk).
+        if start > 0:
+            while start < end and not text[start - 1].isspace():
+                start += 1
     return chunks
 
 

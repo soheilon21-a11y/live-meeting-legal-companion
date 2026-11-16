@@ -58,3 +58,15 @@ def dismiss_observation(session_id: str, obs_id: str) -> bool:
             _save(session_id, observations)
             return True
     return False
+
+
+def delete_observations(session_id: str) -> bool:
+    """Remove the observations file for a session (idempotent).
+
+    Returns True when a file was removed, False when none existed.
+    """
+    p = _path(session_id)
+    if p.exists():
+        p.unlink()
+        return True
+    return False

@@ -85,7 +85,12 @@
         "supported": "supported",
         "conflicting": "conflicting",
         "insufficient": "insufficient"
-      }
+      },
+      "insufficientNotice": "Insufficient evidence: the model reviewed the retrieved passages and found none that supports this discussion point. This is a valid result, not a processing error.",
+      "retrievalOnlyNotice": "Processing note: the local model did not return a usable answer, so no issue was generated. The quoted passage below is retrieval-only. Retry the analysis when the local model is available.",
+      "noEvidenceNotice": "Processing note: no indexed passage was retrieved for this discussion point. This is not an insufficient-evidence finding — re-upload the document or retry the analysis.",
+      "retrievalOnlyShort": "retrieval-only — model unavailable",
+      "noEvidenceShort": "no indexed passage — retry"
     },
     "draftLabel": "draft — review required",
     "disclaimer": "Draft — review required. Not legal advice.",
